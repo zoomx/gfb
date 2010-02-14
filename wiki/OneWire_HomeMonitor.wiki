@@ -1,0 +1,31 @@
+#summary Brief info on my onewire project to monitor temperatures around the house.
+#labels Featured
+
+= Introduction =
+
+A project to have arduino managed onewire thermometers around the house. Eventually I'll have a cron job to query the arduino nic (wiznet) and graph the data, but for now just stumbling through onewire network issues.
+
+
+= Details =
+
+===Hardware:===
+ * [http://arduino.cc/en/Main/ArduinoBoardDuemilanove Arduino Duamillanove] - Make sure to get the version with the Atmega328, the extra memory is required with later versions of the code.
+
+ * [http://www.adafruit.com/index.php?main_page=product_info&cPath=17_21&products_id=83 Adafruid etherShield] - Well designed shield kits, make life easy :)
+
+ * [http://wiznet.co.kr/en WizNet WIZ811MJ Ethernet module] - Nothing special here, though I haven't used the other ethernet modules.
+
+ * [http://www.maxim-ic.com/products/1-wire/ Maxim-IC DS18B20, DS18S20, DS18B20P one-wire thermometers] - Stick with the DS18B20 or DS18B20P version, the DS18S20 is not really worth the trouble.
+
+ * [http://www.hobby-boards.com/catalog/product_info.php?cPath=25_28&products_id=48 Hobby-Boards temp circuit boards] - These are really nice though I wish they werent restricted to parasite power for the ds18's :(
+
+ * [http://www.sparkfun.com/commerce/product_info.php?products_id=462 Sparkfun 4x20 LCD w SerLCD backpack] - Pretty nice serial interface to the HD44780 on the lcd
+
+ * Cat5e cabling in my walls...
+
+===Software:===
+ * Slightly modified [http://milesburton.com/index.php?title=Dallas_Temperature_Control_Library Dallas Temp Library], sent them my changes, lets see if they get added :)
+
+ * [http://www.arduino.cc/playground/Learning/SparkFunSerLCD SerLCD Library]
+
+ * [http://code.google.com/p/tinkerit/source/browse/#svn/trunk/Ethernet2 Ethernet2 Library] - This is older than the current arduino Ethernet library but seems to work better. Not sure whats going on here :(
