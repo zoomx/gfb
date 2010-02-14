@@ -26,6 +26,6 @@ A project to have arduino managed onewire thermometers around the house. Eventua
 ===Software:===
  * Slightly modified [http://milesburton.com/index.php?title=Dallas_Temperature_Control_Library Dallas Temp Library], sent them my changes, lets see if they get added :)
 
- * [http://www.arduino.cc/playground/Learning/SparkFunSerLCD SerLCD Library]
+ * [http://www.arduino.cc/playground/Learning/SparkFunSerLCD SparkFunSerLCD Library]
 
  * [http://code.google.com/p/tinkerit/source/browse/#svn/trunk/Ethernet2 Ethernet2 Library] - This is older than the current arduino Ethernet library but seems to work better. Not sure whats going on here :(
