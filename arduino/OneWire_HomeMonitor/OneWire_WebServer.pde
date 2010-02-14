@@ -139,8 +139,8 @@ void serviceWebClient(void)
 
 void WebOutputDebug(Client client)
 {
-  float tempF;
-  DeviceAddress DeviceAddress;
+//  float tempF;
+  DeviceAddress deviceAddress;
   
   client.println("------- <br />");
   client.print("Devices at boot: ");
@@ -154,17 +154,20 @@ void WebOutputDebug(Client client)
   for(int i=0;i<10; i++)
   {
     // Search the wire for address
-    if(sensors.getAddress(DeviceAddress, i))
+    if(sensors.getAddress(deviceAddress, i))
     {
       client.print("Found device ");
       client.print(i, DEC);
       client.print(" -- ");
-      printAddress(DeviceAddress, client);
+      printAddress(deviceAddress, client);
 
       client.print(" -- temp: ");
-      tempF = sensors.getTempF(DeviceAddress);
-      client.print(dtostrf(tempF, 5, 2, buffer));
-      client.println("<br />");
+//      tempF = sensors.getTempF(deviceAddress);
+//      client.print(dtostrf(tempF, 5, 2, buffer));
+      client.print(dtostrf(sensors.getTempF(deviceAddress), 5, 2, buffer));
+      client.print("F, ");
+      client.print(dtostrf(sensors.getTempC(deviceAddress), 5, 2, buffer));
+      client.println("C <br />");
     }
   } 
   client.print("uptime: ");
