@@ -29,3 +29,6 @@ A project to have arduino managed onewire thermometers around the house. Eventua
  * [http://www.arduino.cc/playground/Learning/SparkFunSerLCD SparkFunSerLCD Library]
 
  * [http://code.google.com/p/tinkerit/source/browse/#svn/trunk/Ethernet2 Ethernet2 Library] - This is older than the current arduino Ethernet library but seems to work better. Not sure whats going on here :(
+
+=Thoughts=
+Have been having some issues with DS18's not showing up on the network, or some of them wiping out the network entirely when plugged in. I think parasite power is partly to blame on the 30ft cat5 runs, but not really sure. I _really_ wish hobby-boards made a powered version of their board, I might try some of the other vendors to see if it makes a difference. Any thoughts or help is greatly appreciated.
