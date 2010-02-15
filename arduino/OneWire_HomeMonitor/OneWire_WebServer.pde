@@ -6,7 +6,7 @@
 #include <SparkFunSerLCD.h>
 
 #define LCD_REFRESH 10000
-#define REZ 12
+#define HIREZ 12
 #define LOREZ 9
 
 // Setup oneWire networkA
@@ -46,8 +46,8 @@ void setup()
   
   //0x10 == DS18S20
   //0x28 == DS18B20
-  T1 = { 0x28, 0x38, 0x8C, 0x87, 0x02, 0x00, 0x0, 0xA8 };
-  T2 = { 0x10, 0xB4, 0x22, 0xFA, 0x01, 0x08, 0x0, 0xEC }; //Attic?
+  T1 = { 0x28, 0x38, 0x8C, 0x87, 0x02, 0x00, 0x0, 0xA8 }; //Attic
+  T2 = { 0x10, 0xB4, 0x22, 0xFA, 0x01, 0x08, 0x0, 0xEC }; 
   T3 = { 0x28, 0xED, 0x89, 0x87, 0x02, 0x00, 0x0, 0x55 }; //Master Bed
   T4 = { 0x10, 0x65, 0x37, 0xFA, 0x01, 0x08, 0x0, 0xB1 };
   T5 = { 0x28, 0xF5, 0x05, 0x06, 0x02, 0x00, 0x0, 0x13 }; //arduino local - netA
@@ -140,12 +140,12 @@ void serviceWebClient(void)
 void runNetworkA()
 {
   //do local
-  sensorsA.setResolution(T5, REZ);
+  sensorsA.setResolution(T5, HIREZ);
   sensorsA.requestTemperaturesByAddress(T5);
   T5temp = sensorsA.getTempF(T5);
   
   //do thermostat
-  sensorsA.setResolution(T6, REZ);
+  sensorsA.setResolution(T6, HIREZ);
   sensorsA.requestTemperaturesByAddress(T6);
   T6temp = sensorsA.getTempF(T6);
 }
@@ -155,23 +155,23 @@ void runNetworkA()
 //go through remaining DS18's...
 void runNetworkB()
 {
-  sensorsB.setResolution(T1, REZ);
+  sensorsB.setResolution(T1, HIREZ);
   sensorsB.requestTemperaturesByAddress(T1);
   T1temp = sensorsB.getTempF(T1);
   
-  sensorsB.setResolution(T2, LOREZ);
-  sensorsB.requestTemperaturesByAddress(T2);
-  T2temp = sensorsB.getTempF(T2);
+//  sensorsB.setResolution(T2, LOREZ);
+//  sensorsB.requestTemperaturesByAddress(T2);
+//  T2temp = sensorsB.getTempF(T2);
   
-  sensorsB.setResolution(T3, REZ);
+  sensorsB.setResolution(T3, HIREZ);
   sensorsB.requestTemperaturesByAddress(T3);
   T3temp = sensorsB.getTempF(T3);
   
-  sensorsB.setResolution(T4, LOREZ);
-  sensorsB.requestTemperaturesByAddress(T4);
-  T4temp = sensorsB.getTempF(T4);
+//  sensorsB.setResolution(T4, LOREZ);
+//  sensorsB.requestTemperaturesByAddress(T4);
+//  T4temp = sensorsB.getTempF(T4);
   
-  sensorsB.setResolution(T7, REZ);
+  sensorsB.setResolution(T7, HIREZ);
   sensorsB.requestTemperaturesByAddress(T7);
   T7temp = sensorsB.getTempF(T7);
 }
@@ -293,15 +293,15 @@ void lcd4TempUpdate()
     lcd.at(3,6, "---- ");
  
   lcd.at(3,11, "Bsmt:");
-  if (sensorsB.isConnected(T1))
-    lcd.at(3,16, dtostrf(T1temp, 4, 1, buffer));
+  if (sensorsB.isConnected(T2))
+    lcd.at(3,16, dtostrf(T2temp, 4, 1, buffer));
   else
     lcd.at(3,16, "---- ");
         
   //line 4
   lcd.at(4,1, "Attc:");
-  if (sensorsB.isConnected(T2))
-    lcd.at(4,6, dtostrf(T2temp, 4, 1, buffer));
+  if (sensorsB.isConnected(T1))
+    lcd.at(4,6, dtostrf(T1temp, 4, 1, buffer));
   else
     lcd.at(4,6, "---- ");
     
