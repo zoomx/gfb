@@ -6,7 +6,8 @@
 #include <SparkFunSerLCD.h>
 
 #define LCD_REFRESH 10000
-#define REZ 10
+#define REZ 12
+#define LOREZ 9
 
 // Setup oneWire networkA
 OneWire oneWireA(4);
@@ -32,6 +33,7 @@ char buffer[32];
 int foundDevices = 0;
 
 Server server(80);
+
 
 void setup()
 {
@@ -61,15 +63,15 @@ void setup()
   lcd4TempUpdate();
 }
 
+
 void loop()
 {
   serviceWebClient();
   
-  if (cycleCheck(&lastMillis, LCD_REFRESH))
-  {
+  if (cycleCheck(&lastMillis, LCD_REFRESH)) {
     //update lcd every LCD_REFRESH seconds
     //sensors.requestTemperatures();
-//    ReqTempSeq(sensors);
+    //ReqTempSeq(sensors);
     runNetworkA();
     runNetworkB();
     lcd4TempUpdate();
@@ -80,8 +82,7 @@ void loop()
 boolean cycleCheck(unsigned long *lastMillis, unsigned int cycle)
 {
   unsigned long currentMillis = millis();
-  if (currentMillis - *lastMillis >= cycle)
-  {
+  if (currentMillis - *lastMillis >= cycle) {
     *lastMillis = currentMillis;
     return true;
   }
@@ -133,6 +134,7 @@ void serviceWebClient(void)
   }
 }
 
+
 //scan, convert_t on networkA
 //we know netA has only the local and lcd DS18B20's in powered mode
 void runNetworkA()
@@ -148,6 +150,7 @@ void runNetworkA()
   T6temp = sensorsA.getTempF(T6);
 }
 
+
 //scan, convet_t, etc on networkB
 //go through remaining DS18's...
 void runNetworkB()
@@ -156,7 +159,7 @@ void runNetworkB()
   sensorsB.requestTemperaturesByAddress(T1);
   T1temp = sensorsB.getTempF(T1);
   
-  sensorsB.setResolution(T2, REZ);
+  sensorsB.setResolution(T2, LOREZ);
   sensorsB.requestTemperaturesByAddress(T2);
   T2temp = sensorsB.getTempF(T2);
   
@@ -164,7 +167,7 @@ void runNetworkB()
   sensorsB.requestTemperaturesByAddress(T3);
   T3temp = sensorsB.getTempF(T3);
   
-  sensorsB.setResolution(T4, REZ);
+  sensorsB.setResolution(T4, LOREZ);
   sensorsB.requestTemperaturesByAddress(T4);
   T4temp = sensorsB.getTempF(T4);
   
@@ -172,6 +175,7 @@ void runNetworkB()
   sensorsB.requestTemperaturesByAddress(T7);
   T7temp = sensorsB.getTempF(T7);
 }
+  
   
 void WebOutputDebug(Client client)
 {
@@ -187,11 +191,9 @@ void WebOutputDebug(Client client)
 
   // Loop through netA, print out address
   client.println("--netA--<br />");
-  for(int i=0;i<5; i++)
-  {
+  for(int i=0;i<5; i++) {
     // Search the wire for address
-    if(sensorsA.getAddress(deviceAddress, i))
-    {
+    if(sensorsA.getAddress(deviceAddress, i)) {
       client.print("Found device ");
       client.print(i, DEC);
       client.print(" -- ");
@@ -206,11 +208,9 @@ void WebOutputDebug(Client client)
   } 
   // Loop through netB, print out address
   client.println("--netB--<br />");
-  for(int i=0;i<10; i++)
-  {
+  for(int i=0;i<10; i++) {
     // Search the wire for address
-    if(sensorsB.getAddress(deviceAddress, i))
-    {
+    if(sensorsB.getAddress(deviceAddress, i)) {
       client.print("Found device ");
       client.print(i, DEC);
       client.print(" -- ");
@@ -256,6 +256,7 @@ void WebOutputTemps(Client client)
   client.println("<br />");  
 }
 
+
 void lcd4TempUpdate()
 {
   //line 1
@@ -263,60 +264,59 @@ void lcd4TempUpdate()
   if (sensorsA.isConnected(T6))
     lcd.at(1,6, dtostrf(T6temp, 4, 1, buffer));
   else
-    lcd.at(1,6, "----");
+    lcd.at(1,6, "---- ");
  
   lcd.at(1,11, "Util:");
   if (sensorsA.isConnected(T5))
     lcd.at(1,16, dtostrf(T5temp, 4, 1, buffer));
   else
-    lcd.at(1,16, "----");
+    lcd.at(1,16, "---- ");
     
   //line 2
   lcd.at(2,1, "MBed:");
   if (sensorsB.isConnected(T3))
     lcd.at(2,6, dtostrf(T3temp, 4, 1, buffer));
   else
-    lcd.at(2,6, "----");
+    lcd.at(2,6, "---- ");
  
   lcd.at(2,11, "Grge:");
   if (sensorsB.isConnected(T4))
     lcd.at(2,16, dtostrf(T4temp, 4, 1, buffer));
   else
-    lcd.at(2,16, "----");
+    lcd.at(2,16, "---- ");
     
   //line 3
   lcd.at(3,1, "Kitc:");
   if (sensorsB.isConnected(T4))
     lcd.at(3,6, dtostrf(T4temp, 4, 1, buffer));
   else
-    lcd.at(3,6, "----");
+    lcd.at(3,6, "---- ");
  
   lcd.at(3,11, "Bsmt:");
   if (sensorsB.isConnected(T1))
     lcd.at(3,16, dtostrf(T1temp, 4, 1, buffer));
   else
-    lcd.at(3,16, "----");
+    lcd.at(3,16, "---- ");
         
   //line 4
   lcd.at(4,1, "Attc:");
   if (sensorsB.isConnected(T2))
     lcd.at(4,6, dtostrf(T2temp, 4, 1, buffer));
   else
-    lcd.at(4,6, "----");
+    lcd.at(4,6, "---- ");
     
   lcd.at(4,11, "Out:");
   if (sensorsB.isConnected(T7))
     lcd.at(4,16, dtostrf(T7temp, 4, 1, buffer));
   else
-    lcd.at(4,16, "----");
+    lcd.at(4,16, "---- ");
 }
 
 
 // print a device address to serial
 void printAddress(DeviceAddress deviceAddress, Client client)
 {
-  for (uint8_t i = 0; i < 8; i++)
-  {
+  for (uint8_t i = 0; i < 8; i++) {
     if (deviceAddress[i] < 16) client.print("0");
     client.print(deviceAddress[i], HEX);
     client.print(".");
