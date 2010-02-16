@@ -22,8 +22,8 @@ DallasTemperature sensorsB(&oneWireB);
 SparkFunSerLCD lcd(5,4,20);
 
 
-DeviceAddress T1, T2, T3, T4, T5, T6, T7, HVAC;
-float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp;
+DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, HVAC;
+float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp;
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte ip[] = { 192, 168, 1, 80 };
 //byte gateway[] = { 192, 168, 1, 1 };
@@ -47,12 +47,13 @@ void setup()
   //0x10 == DS18S20
   //0x28 == DS18B20
   T1 = { 0x28, 0x38, 0x8C, 0x87, 0x02, 0x00, 0x0, 0xA8 }; //Attic
-  T2 = { 0x10, 0xB4, 0x22, 0xFA, 0x01, 0x08, 0x0, 0xEC }; 
+  T2 = { 0x28, 0x22, 0x8E, 0x87, 0x02, 0x00, 0x0, 0xBF }; 
   T3 = { 0x28, 0xED, 0x89, 0x87, 0x02, 0x00, 0x0, 0x55 }; //Master Bed
   T4 = { 0x10, 0x65, 0x37, 0xFA, 0x01, 0x08, 0x0, 0xB1 };
   T5 = { 0x28, 0xF5, 0x05, 0x06, 0x02, 0x00, 0x0, 0x13 }; //arduino local - netA
   T6 = { 0x28, 0xEB, 0xC9, 0x0E, 0x02, 0x00, 0x0, 0x44 }; //thermostat - netA
   T7 = { 0x28, 0xB2, 0x8E, 0x87, 0x02, 0x00, 0x0, 0x0E }; //outside
+  T8 = { 0x28, 0x6E, 0xCC, 0x89, 0x00, 0x00, 0x0, 0x87 }; //garage
   HVAC = {};
   
   //seed LCD
@@ -148,6 +149,11 @@ void runNetworkA()
   sensorsA.setResolution(T6, HIREZ);
   sensorsA.requestTemperaturesByAddress(T6);
   T6temp = sensorsA.getTempF(T6);
+  
+  //do garage
+  sensorsA.setResolution(T8, HIREZ);
+  sensorsA.requestTemperaturesByAddress(T8);
+  T6temp = sensorsA.getTempF(T8);
 }
 
 
@@ -251,6 +257,9 @@ void WebOutputTemps(Client client)
   client.print("T7:");
   client.print(T7temp);
   client.println("<br />");
+  client.print("T8:");
+  client.print(T8temp);
+  client.println("<br />");
   client.print("HVAC:");
   client.print("***");
   client.println("<br />");  
@@ -280,8 +289,8 @@ void lcd4TempUpdate()
     lcd.at(2,6, "---- ");
  
   lcd.at(2,11, "Grge:");
-  if (sensorsB.isConnected(T4))
-    lcd.at(2,16, dtostrf(T4temp, 4, 1, buffer));
+  if (sensorsB.isConnected(T8))
+    lcd.at(2,16, dtostrf(T8temp, 4, 1, buffer));
   else
     lcd.at(2,16, "---- ");
     
