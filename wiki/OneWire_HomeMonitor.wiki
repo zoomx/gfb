@@ -32,3 +32,8 @@ A project to have arduino managed onewire thermometers around the house. Eventua
 
 =Thoughts=
 Have been having some issues with DS18's not showing up on the network, or some of them wiping out the network entirely when plugged in. I think parasite power is partly to blame on the 30ft cat5 runs, but not really sure. I _really_ wish hobby-boards made a powered version of their board, I might try some of the other vendors to see if it makes a difference. Any thoughts or help is greatly appreciated.
+
+=How it Looks=
+http://lh4.ggpht.com/_IhezzMAaFLg/S3wKa_6kifI/AAAAAAAAFZs/2ZMVK3L_6qI/s640/IMG_0324.JPG
+http://lh5.ggpht.com/_IhezzMAaFLg/S3wKoeintcI/AAAAAAAAFag/zH8cE_Ygv-8/s640/IMG_0326.JPG
+http://lh3.ggpht.com/_IhezzMAaFLg/S3wKuIEyjLI/AAAAAAAAFbA/pwDlJKmLDWE/s512/IMG_0327.JPG
