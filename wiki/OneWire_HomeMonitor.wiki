@@ -24,7 +24,7 @@ A project to have arduino managed onewire thermometers around the house. Eventua
  * Cat5e cabling in my walls...
 
 ===Software:===
- * Slightly modified [http://milesburton.com/index.php?title=Dallas_Temperature_Control_Library Dallas Temp Library], sent them my changes, lets see if they get added :)
+ * [http://milesburton.com/index.php?title=Dallas_Temperature_Control_Library Dallas Temp Library], version 3.5 or newer.
 
  * [http://www.arduino.cc/playground/Learning/SparkFunSerLCD SparkFunSerLCD Library]
 
