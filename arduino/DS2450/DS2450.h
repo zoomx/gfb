@@ -14,8 +14,15 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
+    Copyright 2010 Guilherme Barros
+*/
+/*
+    Part of this code is based off of Paul East's _1wireweatherstation.pde
+    http://www.paulandkate.f2s.com/wordpress/wp-content/uploads/2009/01/_1wireweatherstation.pde
+    I have tried to contact him to figure out what license he will be using 
+    but did not hear back. Paul, if you read this please contact me ;)
+*/
 
 
 #include <OneWire.h>
