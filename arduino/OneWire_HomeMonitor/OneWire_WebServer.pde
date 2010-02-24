@@ -1,3 +1,20 @@
+/*
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2010 Guilherme Barros
+*/
+
 #include <stdlib.h>
 #include <Ethernet2.h>
 #include <OneWire.h>
@@ -6,8 +23,7 @@
 #include <SparkFunSerLCD.h>
 
 #define LCD_REFRESH 10000
-#define HIREZ 12
-#define LOREZ 9
+#define REZ 9
 
 // Setup oneWire networkA
 OneWire oneWireA(4);
@@ -22,12 +38,10 @@ DallasTemperature sensorsB(&oneWireB);
 SparkFunSerLCD lcd(5,4,20);
 
 
-DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, HVAC;
-float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp;
+DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
+float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte ip[] = { 192, 168, 1, 80 };
-//byte gateway[] = { 192, 168, 1, 1 };
-//byte subnet[] = { 255, 255, 255, 0 };
 unsigned long lastMillis = 0;
 char buffer[32];
 int foundDevices = 0;
@@ -42,25 +56,25 @@ void setup()
   sensorsA.begin();
   sensorsB.begin();
   lcd.setup();
-//  lcd.bright(75);
+  lcd.bright(75);
   
   //0x10 == DS18S20
   //0x28 == DS18B20
   T1 = { 0x28, 0x38, 0x8C, 0x87, 0x02, 0x00, 0x0, 0xA8 }; //Attic
-  T2 = { 0x28, 0x22, 0x8E, 0x87, 0x02, 0x00, 0x0, 0xBF }; 
+  T2 = { 0x28, 0x22, 0x8E, 0x87, 0x02, 0x00, 0x0, 0xBF }; //basement
   T3 = { 0x28, 0xED, 0x89, 0x87, 0x02, 0x00, 0x0, 0x55 }; //Master Bed
   T4 = { 0x10, 0x65, 0x37, 0xFA, 0x01, 0x08, 0x0, 0xB1 };
   T5 = { 0x28, 0xF5, 0x05, 0x06, 0x02, 0x00, 0x0, 0x13 }; //arduino local - netA
   T6 = { 0x28, 0xEB, 0xC9, 0x0E, 0x02, 0x00, 0x0, 0x44 }; //thermostat - netA
   T7 = { 0x28, 0xB2, 0x8E, 0x87, 0x02, 0x00, 0x0, 0x0E }; //outside
-  T8 = { 0x28, 0x6E, 0xCC, 0x89, 0x00, 0x00, 0x0, 0x87 }; //garage
-  HVAC = {};
+  T8 = { 0x28, 0x6E, 0xCC, 0x89, 0x00, 0x00, 0x0, 0x87 }; //kitchen - netA
+  T9 = { 0x28, 0xC3, 0xAD, 0x87, 0x02, 0x00, 0x0, 0x17 }; //garage - netA
+  T10 = { 0x28, 0x04, 0xB1, 0x87, 0x02, 0x0, 0x0, 0x50 }; 
+  HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
   
   //seed LCD
-//  sensors.requestTemperatures();
   runNetworkA();
   runNetworkB();
-//  ReqTempSeq(sensors);
   lcd4TempUpdate();
 }
 
@@ -71,8 +85,6 @@ void loop()
   
   if (cycleCheck(&lastMillis, LCD_REFRESH)) {
     //update lcd every LCD_REFRESH seconds
-    //sensors.requestTemperatures();
-    //ReqTempSeq(sensors);
     runNetworkA();
     runNetworkB();
     lcd4TempUpdate();
@@ -107,8 +119,6 @@ void serviceWebClient(void)
           client.println("Content-Type: text/html");
           client.println();
           
-//          sensors.requestTemperatures();
-//          ReqTempSeq(sensors);
           runNetworkA();
           runNetworkB();
                
@@ -140,20 +150,33 @@ void serviceWebClient(void)
 //we know netA has only the local and lcd DS18B20's in powered mode
 void runNetworkA()
 {
+//  sensorsA.requestTemperatures();
   //do local
-  sensorsA.setResolution(T5, HIREZ);
+  sensorsA.setResolution(T5, REZ);
   sensorsA.requestTemperaturesByAddress(T5);
   T5temp = sensorsA.getTempF(T5);
   
   //do thermostat
-  sensorsA.setResolution(T6, HIREZ);
+  sensorsA.setResolution(T6, REZ);
   sensorsA.requestTemperaturesByAddress(T6);
   T6temp = sensorsA.getTempF(T6);
   
-  //do garage
-  sensorsA.setResolution(T8, HIREZ);
+  //do kitchen
+//  delay(200);
+  sensorsA.setResolution(T8, REZ);
   sensorsA.requestTemperaturesByAddress(T8);
-  T6temp = sensorsA.getTempF(T8);
+  T8temp = sensorsA.getTempF(T8);
+  
+  //do garage
+  sensorsA.setResolution(T9, REZ);
+  sensorsA.requestTemperaturesByAddress(T9);
+  T9temp = sensorsA.getTempF(T9);
+  
+//  delay(200);
+  //do basement
+//  sensorsA.setResolution(T10, REZ);
+//  sensorsA.requestTemperaturesByAddress(T10);
+//  T10temp = sensorsA.getTempF(T10);
 }
 
 
@@ -161,23 +184,23 @@ void runNetworkA()
 //go through remaining DS18's...
 void runNetworkB()
 {
-  sensorsB.setResolution(T1, HIREZ);
+  sensorsB.setResolution(T1, REZ);
   sensorsB.requestTemperaturesByAddress(T1);
   T1temp = sensorsB.getTempF(T1);
   
-//  sensorsB.setResolution(T2, LOREZ);
-//  sensorsB.requestTemperaturesByAddress(T2);
-//  T2temp = sensorsB.getTempF(T2);
+  sensorsB.setResolution(T2, REZ);
+  sensorsB.requestTemperaturesByAddress(T2);
+  T2temp = sensorsB.getTempF(T2);
   
-  sensorsB.setResolution(T3, HIREZ);
+  sensorsB.setResolution(T3, REZ);
   sensorsB.requestTemperaturesByAddress(T3);
   T3temp = sensorsB.getTempF(T3);
   
-//  sensorsB.setResolution(T4, LOREZ);
-//  sensorsB.requestTemperaturesByAddress(T4);
-//  T4temp = sensorsB.getTempF(T4);
+//  sensorsB.setResolution(T10, REZ);
+//  sensorsB.requestTemperaturesByAddress(T10);
+//  T10temp = sensorsB.getTempF(T10);
   
-  sensorsB.setResolution(T7, HIREZ);
+  sensorsB.setResolution(T7, REZ);
   sensorsB.requestTemperaturesByAddress(T7);
   T7temp = sensorsB.getTempF(T7);
 }
@@ -221,12 +244,15 @@ void WebOutputDebug(Client client)
       client.print(i, DEC);
       client.print(" -- ");
       printAddress(deviceAddress, client);
+      
+      delay(100);
 
       client.print(" -- temp: ");
       client.print(dtostrf(sensorsB.getTempF(deviceAddress), 5, 2, buffer));
       client.print("F, ");
       client.print(dtostrf(sensorsB.getTempC(deviceAddress), 5, 2, buffer));
       client.println("C <br />");
+      delay(100);
     }
   } 
   client.print("uptime: ");
@@ -260,6 +286,12 @@ void WebOutputTemps(Client client)
   client.print("T8:");
   client.print(T8temp);
   client.println("<br />");
+  client.print("T9:");
+  client.print(T9temp);
+  client.println("<br />");
+  client.print("T10:");
+  client.print(T10temp);
+  client.println("<br />");
   client.print("HVAC:");
   client.print("***");
   client.println("<br />");  
@@ -289,15 +321,15 @@ void lcd4TempUpdate()
     lcd.at(2,6, "---- ");
  
   lcd.at(2,11, "Grge:");
-  if (sensorsB.isConnected(T8))
-    lcd.at(2,16, dtostrf(T8temp, 4, 1, buffer));
+  if (sensorsA.isConnected(T9))
+    lcd.at(2,16, dtostrf(T9temp, 4, 1, buffer));
   else
     lcd.at(2,16, "---- ");
     
   //line 3
   lcd.at(3,1, "Kitc:");
-  if (sensorsB.isConnected(T4))
-    lcd.at(3,6, dtostrf(T4temp, 4, 1, buffer));
+  if (sensorsA.isConnected(T8))
+    lcd.at(3,6, dtostrf(T8temp, 4, 1, buffer));
   else
     lcd.at(3,6, "---- ");
  
