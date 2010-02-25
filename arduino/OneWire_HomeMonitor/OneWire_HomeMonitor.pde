@@ -22,36 +22,44 @@
 #include <SoftwareSerial.h>
 #include <SparkFunSerLCD.h>
 
-#define LCD_REFRESH 10000
+#define LCD_REFRESH 10000 // NO FASTER THAN 5s!!
 #define REZ 9
+
+#define PACHUBE_FEED_ID    5916     // pachube feed
+#define PACHUBE_API_KEY "1ed93c2b567f6ff8bd63e708e3c62b7fbd122ed6ee3db2fd8ef1c8cfca8518bb"
+
 
 // Setup oneWire networkA
 OneWire oneWireA(4);
 DallasTemperature sensorsA(&oneWireA);
 
-// Setup oneWire network
+// Setup oneWire networkB
 OneWire oneWireB(6);
 DallasTemperature sensorsB(&oneWireB);
 
 // Setup LCD
-//SparkFunSerLCD lcd(5,2,16);
 SparkFunSerLCD lcd(5,4,20);
 
 
 DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
 float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
+
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte ip[] = { 192, 168, 1, 80 };
+byte gw[] = { 192, 168, 1, 1 };
+byte pachubeServer[] = { 209, 40, 205, 90 };
+
 unsigned long lastMillis = 0;
 char buffer[32];
 int foundDevices = 0;
 
 Server server(80);
+Client pachubeClient(pachubeServer, 80);
 
 
 void setup()
 {
-  Ethernet.begin(mac, ip);
+  Ethernet.begin(mac, ip, gw);
   server.begin();
   sensorsA.begin();
   sensorsB.begin();
@@ -88,6 +96,7 @@ void loop()
     runNetworkA();
     runNetworkB();
     lcd4TempUpdate();
+    pachube_out();
   }
 }
 
@@ -257,100 +266,6 @@ void WebOutputDebug(Client client)
   } 
   client.print("uptime: ");
   client.println(millis());
-}
-
-
-void WebOutputTemps(Client client)
-{
-  client.print("T1:");
-  client.print(T1temp);
-  client.println("<br />");
-  client.print("T2:");
-  client.print(T2temp);
-  client.println("<br />");
-  client.print("T3:");
-  client.print(T3temp);
-  client.println("<br />");
-  client.print("T4:");
-  client.print(T4temp);
-  client.println("<br />");  
-  client.print("T5:");
-  client.print(T5temp);
-  client.println("<br />");
-  client.print("T6:");
-  client.print(T6temp);
-  client.println("<br />"); 
-  client.print("T7:");
-  client.print(T7temp);
-  client.println("<br />");
-  client.print("T8:");
-  client.print(T8temp);
-  client.println("<br />");
-  client.print("T9:");
-  client.print(T9temp);
-  client.println("<br />");
-  client.print("T10:");
-  client.print(T10temp);
-  client.println("<br />");
-  client.print("HVAC:");
-  client.print("***");
-  client.println("<br />");  
-}
-
-
-void lcd4TempUpdate()
-{
-  //line 1
-  lcd.at(1,1, "Here:");
-  if (sensorsA.isConnected(T6))
-    lcd.at(1,6, dtostrf(T6temp, 4, 1, buffer));
-  else
-    lcd.at(1,6, "---- ");
- 
-  lcd.at(1,11, "Util:");
-  if (sensorsA.isConnected(T5))
-    lcd.at(1,16, dtostrf(T5temp, 4, 1, buffer));
-  else
-    lcd.at(1,16, "---- ");
-    
-  //line 2
-  lcd.at(2,1, "MBed:");
-  if (sensorsB.isConnected(T3))
-    lcd.at(2,6, dtostrf(T3temp, 4, 1, buffer));
-  else
-    lcd.at(2,6, "---- ");
- 
-  lcd.at(2,11, "Grge:");
-  if (sensorsA.isConnected(T9))
-    lcd.at(2,16, dtostrf(T9temp, 4, 1, buffer));
-  else
-    lcd.at(2,16, "---- ");
-    
-  //line 3
-  lcd.at(3,1, "Kitc:");
-  if (sensorsA.isConnected(T8))
-    lcd.at(3,6, dtostrf(T8temp, 4, 1, buffer));
-  else
-    lcd.at(3,6, "---- ");
- 
-  lcd.at(3,11, "Bsmt:");
-  if (sensorsB.isConnected(T2))
-    lcd.at(3,16, dtostrf(T2temp, 4, 1, buffer));
-  else
-    lcd.at(3,16, "---- ");
-        
-  //line 4
-  lcd.at(4,1, "Attc:");
-  if (sensorsB.isConnected(T1))
-    lcd.at(4,6, dtostrf(T1temp, 4, 1, buffer));
-  else
-    lcd.at(4,6, "---- ");
-    
-  lcd.at(4,11, "Out:");
-  if (sensorsB.isConnected(T7))
-    lcd.at(4,16, dtostrf(T7temp, 4, 1, buffer));
-  else
-    lcd.at(4,16, "---- ");
 }
 
 
