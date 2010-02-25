@@ -31,7 +31,7 @@ void WebOutputTemps(Client client)
   client.print(T10temp);
   client.println("<br />");
   client.print("HVAC:");
-  client.print("***");
+  client.print(hvacVal);
   client.println("<br />");  
 }
 

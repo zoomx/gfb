@@ -21,6 +21,7 @@
 #include <DallasTemperature.h>
 #include <SoftwareSerial.h>
 #include <SparkFunSerLCD.h>
+#include <DS2450.h>
 
 #define LCD_REFRESH 10000 // NO FASTER THAN 5s!!
 #define REZ 9
@@ -37,12 +38,15 @@ DallasTemperature sensorsA(&oneWireA);
 OneWire oneWireB(6);
 DallasTemperature sensorsB(&oneWireB);
 
+ds2450 hvacMon(&oneWireA);
 // Setup LCD
 SparkFunSerLCD lcd(5,4,20);
 
 
 DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
+//DeviceAddress HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
 float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
+int hvacVal = 0;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte ip[] = { 192, 168, 1, 80 };
@@ -66,8 +70,8 @@ void setup()
   lcd.setup();
   lcd.bright(75);
   
-  //0x10 == DS18S20
-  //0x28 == DS18B20
+  //0x10 == DS18S20  //0x28 == DS18B20
+  //0x20 == DS2450   //0x1f == DS2409
   T1 = { 0x28, 0x38, 0x8C, 0x87, 0x02, 0x00, 0x0, 0xA8 }; //Attic
   T2 = { 0x28, 0x22, 0x8E, 0x87, 0x02, 0x00, 0x0, 0xBF }; //basement
   T3 = { 0x28, 0xED, 0x89, 0x87, 0x02, 0x00, 0x0, 0x55 }; //Master Bed
@@ -79,6 +83,9 @@ void setup()
   T9 = { 0x28, 0xC3, 0xAD, 0x87, 0x02, 0x00, 0x0, 0x17 }; //garage - netA
   T10 = { 0x28, 0x04, 0xB1, 0x87, 0x02, 0x0, 0x0, 0x50 }; 
   HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
+  
+  //setup 2450 - HVAC, 2.56v, 8bit, parasite, vdiv
+  hvacMon.init(HVAC, 0, 8, 1, 0.9);
   
   //seed LCD
   runNetworkA();
@@ -95,6 +102,7 @@ void loop()
     //update lcd every LCD_REFRESH seconds
     runNetworkA();
     runNetworkB();
+    hvacData();
     lcd4TempUpdate();
     pachube_out();
   }
@@ -130,6 +138,7 @@ void serviceWebClient(void)
           
           runNetworkA();
           runNetworkB();
+          hvacData();
                
           WebOutputTemps(client);
           WebOutputDebug(client);
@@ -268,6 +277,15 @@ void WebOutputDebug(Client client)
   client.println(millis());
 }
 
+void hvacData()
+{
+  //if heating, set +10, if cooling -10
+  hvacMon.reading();
+  if(hvacMon.voltChD() >= 20)
+    hvacVal = 10;
+  else if (hvacMon.voltChC() >= 20)
+    hvacVal = -10;
+}
 
 // print a device address to serial
 void printAddress(DeviceAddress deviceAddress, Client client)
