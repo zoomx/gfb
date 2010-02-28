@@ -49,6 +49,7 @@ DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
 //DeviceAddress HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
 float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
 char T1tempS[6], T2tempS[6], T3tempS[6], T4tempS[6], T5tempS[6], T6tempS[6], T7tempS[6], T8tempS[6], T9tempS[6], T10tempS[6];
+//char* T1tempS, T2tempS, T3tempS, T4tempS, T5tempS, T6tempS, T7tempS, T8tempS, T9tempS, T10tempS;
 int hvacVal = 0;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -230,9 +231,9 @@ void runNetworkB()
 //  sensorsB.requestTemperaturesByAddress(T10);
 //  T10temp = sensorsB.getTempF(T10);
   
-  sensorsB.setResolution(T7, REZ);
-  sensorsB.requestTemperaturesByAddress(T7);
-  T7temp = sensorsB.getTempF(T7);
+//  sensorsB.setResolution(T7, REZ);
+//  sensorsB.requestTemperaturesByAddress(T7);
+//  T7temp = sensorsB.getTempF(T7);
 }
   
   
@@ -304,16 +305,16 @@ void hvacData()
 
 void makeStrings()
 { //dtostrf(T6temp, 4, 1, buffer)
-  T1tempS = dtostrf(T1temp, 4, 1, buffer);
-  T2tempS = dtostrf(T2temp, 4, 1, buffer);
-  T3tempS = dtostrf(T3temp, 4, 1, buffer);
-  T4tempS = dtostrf(T4temp, 4, 1, buffer);
-  T5tempS = dtostrf(T5temp, 4, 1, buffer);
-  T6tempS = dtostrf(T6temp, 4, 1, buffer);
-  T7tempS = dtostrf(T7temp, 4, 1, buffer);
-  T8tempS = dtostrf(T8temp, 4, 1, buffer);
-  T9tempS = dtostrf(T9temp, 4, 1, buffer);
-  T10tempS = dtostrf(T10temp, 4, 1, buffer);
+  strcpy(T1tempS, dtostrf(T1temp, 4, 1, buffer));
+  strcpy(T2tempS, dtostrf(T2temp, 4, 1, buffer));
+  strcpy(T3tempS, dtostrf(T3temp, 4, 1, buffer));
+  strcpy(T4tempS, dtostrf(T4temp, 4, 1, buffer));
+  strcpy(T5tempS, dtostrf(T5temp, 4, 1, buffer));
+  strcpy(T6tempS, dtostrf(T6temp, 4, 1, buffer));
+  strcpy(T7tempS, dtostrf(T7temp, 4, 1, buffer));
+  strcpy(T8tempS, dtostrf(T8temp, 4, 1, buffer));
+  strcpy(T9tempS, dtostrf(T9temp, 4, 1, buffer));
+  strcpy(T10tempS, dtostrf(T10temp, 4, 1, buffer));
 }
 
 // print a device address to serial
