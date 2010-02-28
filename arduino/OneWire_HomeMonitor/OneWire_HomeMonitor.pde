@@ -26,7 +26,7 @@
 #define LCD_REFRESH 10000 // NO FASTER THAN 5s!!
 #define REZ 9
 
-#define PACHUBE_FEED_ID    5916     // pachube feed
+#define PACHUBE_FEED_ID    5916
 #define PACHUBE_API_KEY "1ed93c2b567f6ff8bd63e708e3c62b7fbd122ed6ee3db2fd8ef1c8cfca8518bb"
 
 
@@ -38,7 +38,9 @@ DallasTemperature sensorsA(&oneWireA);
 OneWire oneWireB(6);
 DallasTemperature sensorsB(&oneWireB);
 
-ds2450 hvacMon(&oneWireA);
+// Setup 2450
+//ds2450 hvacMon(&oneWireA);
+
 // Setup LCD
 SparkFunSerLCD lcd(5,4,20);
 
@@ -46,16 +48,17 @@ SparkFunSerLCD lcd(5,4,20);
 DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
 //DeviceAddress HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
 float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
+char T1tempS[6], T2tempS[6], T3tempS[6], T4tempS[6], T5tempS[6], T6tempS[6], T7tempS[6], T8tempS[6], T9tempS[6], T10tempS[6];
 int hvacVal = 0;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte ip[] = { 192, 168, 1, 80 };
-byte gw[] = { 192, 168, 1, 1 };
-byte pachubeServer[] = { 209, 40, 205, 90 };
+byte pachubeServer[] = { 209, 40, 205, 190 };
 
 unsigned long lastMillis = 0;
 char buffer[32];
 int foundDevices = 0;
+char pachube_data[70];
 
 Server server(80);
 Client pachubeClient(pachubeServer, 80);
@@ -63,12 +66,14 @@ Client pachubeClient(pachubeServer, 80);
 
 void setup()
 {
-  Ethernet.begin(mac, ip, gw);
+  Ethernet.begin(mac, ip);
   server.begin();
   sensorsA.begin();
   sensorsB.begin();
   lcd.setup();
   lcd.bright(75);
+  
+  Serial.begin(9600);
   
   //0x10 == DS18S20  //0x28 == DS18B20
   //0x20 == DS2450   //0x1f == DS2409
@@ -85,7 +90,7 @@ void setup()
   HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
   
   //setup 2450 - HVAC, 2.56v, 8bit, parasite, vdiv
-  hvacMon.init(HVAC, 0, 8, 1, 0.9);
+//  hvacMon.init(HVAC, 0, 8, 1, 0.9);
   
   //seed LCD
   runNetworkA();
@@ -99,11 +104,13 @@ void loop()
   serviceWebClient();
   
   if (cycleCheck(&lastMillis, LCD_REFRESH)) {
+    Serial.println("in update cycle");
     //update lcd every LCD_REFRESH seconds
     runNetworkA();
     runNetworkB();
-    hvacData();
+ //   hvacData();
     lcd4TempUpdate();
+    makeStrings();
     pachube_out();
   }
 }
@@ -123,8 +130,10 @@ boolean cycleCheck(unsigned long *lastMillis, unsigned int cycle)
 
 void serviceWebClient(void)
 {
+  //Serial.print(".");
   Client client = server.available();
   if (client) {
+    Serial.println("servicing web client");
     // an http request ends with a blank line
     boolean current_line_is_blank = true;
     while (client.connected()) {
@@ -138,7 +147,7 @@ void serviceWebClient(void)
           
           runNetworkA();
           runNetworkB();
-          hvacData();
+ //         hvacData();
                
           WebOutputTemps(client);
           WebOutputDebug(client);
@@ -168,6 +177,8 @@ void serviceWebClient(void)
 //we know netA has only the local and lcd DS18B20's in powered mode
 void runNetworkA()
 {
+   //dtostrf(T6temp, 4, 1, buffer)
+  Serial.println("in runNetworkA");
 //  sensorsA.requestTemperatures();
   //do local
   sensorsA.setResolution(T5, REZ);
@@ -202,6 +213,7 @@ void runNetworkA()
 //go through remaining DS18's...
 void runNetworkB()
 {
+  Serial.println("in runNetworkB");
   sensorsB.setResolution(T1, REZ);
   sensorsB.requestTemperaturesByAddress(T1);
   T1temp = sensorsB.getTempF(T1);
@@ -273,18 +285,35 @@ void WebOutputDebug(Client client)
       delay(100);
     }
   } 
-  client.print("uptime: ");
+  client.print("last pachube_data: ");
+  client.println(pachube_data);
+  client.print("\nuptime: ");
   client.println(millis());
 }
-
+/*
 void hvacData()
 {
+  Serial.println("in hvacData");
   //if heating, set +10, if cooling -10
   hvacMon.reading();
   if(hvacMon.voltChD() >= 20)
     hvacVal = 10;
   else if (hvacMon.voltChC() >= 20)
     hvacVal = -10;
+}*/
+
+void makeStrings()
+{ //dtostrf(T6temp, 4, 1, buffer)
+  T1tempS = dtostrf(T1temp, 4, 1, buffer);
+  T2tempS = dtostrf(T2temp, 4, 1, buffer);
+  T3tempS = dtostrf(T3temp, 4, 1, buffer);
+  T4tempS = dtostrf(T4temp, 4, 1, buffer);
+  T5tempS = dtostrf(T5temp, 4, 1, buffer);
+  T6tempS = dtostrf(T6temp, 4, 1, buffer);
+  T7tempS = dtostrf(T7temp, 4, 1, buffer);
+  T8tempS = dtostrf(T8temp, 4, 1, buffer);
+  T9tempS = dtostrf(T9temp, 4, 1, buffer);
+  T10tempS = dtostrf(T10temp, 4, 1, buffer);
 }
 
 // print a device address to serial
@@ -296,3 +325,4 @@ void printAddress(DeviceAddress deviceAddress, Client client)
     client.print(".");
   }
 }
+

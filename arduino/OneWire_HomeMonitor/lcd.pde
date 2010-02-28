@@ -38,6 +38,7 @@ void WebOutputTemps(Client client)
 
 void lcd4TempUpdate()
 {
+  Serial.println("in lcd4TempUpdate");
   //line 1
   lcd.at(1,1, "Here:");
   if (sensorsA.isConnected(T6))
