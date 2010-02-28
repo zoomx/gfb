@@ -28,19 +28,18 @@ extern "C" {
   #include "WConstants.h"
 }
 
-ds2450::ds2450(OneWire* _oneWire)
+ds2450::ds2450(OneWire* _oneWire, uint8_t* deviceAddress, int8_t vrange, int8_t rez, bool parasite, float vdiv)
 {
   _wire = _oneWire;
-}
-
-void ds2450::init(uint8_t* deviceAddress, int8_t vrange, int8_t rez, bool parasite, float vdiv)
-{
   _deviceAddress = deviceAddress;
   _vrange = vrange;
   _rez = rez;
   _parasite = parasite;
   _vdiv = vdiv;
+}
 
+void ds2450::begin()
+{
   if(!_parasite) {                // Not needed if using parasite power
     _wire->reset();
     _wire->write(SKIPROM, 0);      // skip ROM, no parasite power on at the end
@@ -102,7 +101,7 @@ void ds2450::init(uint8_t* deviceAddress, int8_t vrange, int8_t rez, bool parasi
 }
 
 
-void ds2450::reading()
+void ds2450::measure()
 {
   int8_t _HighByte, _LowByte;
 

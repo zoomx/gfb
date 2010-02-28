@@ -41,9 +41,9 @@ typedef uint8_t DeviceAddress[8];
 class ds2450
 {
   public:
-    ds2450(OneWire*);
-    void init(uint8_t*, int8_t, int8_t, bool, float);
-    void reading(void);
+    ds2450(OneWire*, uint8_t*, int8_t, int8_t, bool, float);
+    void begin();
+    void measure(void);
     float voltChA(void);
     float voltChB(void);
     float voltChC(void);
