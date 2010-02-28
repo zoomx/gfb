@@ -18,6 +18,8 @@
 
 void WebOutputTemps(Client client)
 {
+  client.print("CSV:");
+  client.println(csv_data);
   client.print("T1:");
   client.print(T1temp);
   client.println("<br />");
@@ -110,3 +112,55 @@ void lcd4TempUpdate()
     lcd.at(4,16, "---- ");
 }
 
+void WebOutputDebug(Client client)
+{
+  DeviceAddress deviceAddress;
+  
+  client.println("------- <br />");
+  client.print("Devices on netA (at boot): ");
+  client.print(sensorsA.getDeviceCount(), DEC);
+  client.println("<br />");
+  client.print("Devices on netB (at boot): ");
+  client.print(sensorsB.getDeviceCount(), DEC);
+  client.println("<br />");
+
+  // Loop through netA, print out address
+  client.println("--netA--<br />");
+  for(int i=0;i<5; i++) {
+    // Search the wire for address
+    if(sensorsA.getAddress(deviceAddress, i)) {
+      client.print("Found device ");
+      client.print(i, DEC);
+      client.print(" -- ");
+      printAddress(deviceAddress, client);
+
+      client.print(" -- temp: ");
+      client.print(dtostrf(sensorsA.getTempF(deviceAddress), 5, 2, buffer));
+      client.print("F, ");
+      client.print(dtostrf(sensorsA.getTempC(deviceAddress), 5, 2, buffer));
+      client.println("C <br />");
+    }
+  } 
+  // Loop through netB, print out address
+  client.println("--netB--<br />");
+  for(int i=0;i<10; i++) {
+    // Search the wire for address
+    if(sensorsB.getAddress(deviceAddress, i)) {
+      client.print("Found device ");
+      client.print(i, DEC);
+      client.print(" -- ");
+      printAddress(deviceAddress, client);
+      
+      delay(100);
+
+      client.print(" -- temp: ");
+      client.print(dtostrf(sensorsB.getTempF(deviceAddress), 5, 2, buffer));
+      client.print("F, ");
+      client.print(dtostrf(sensorsB.getTempC(deviceAddress), 5, 2, buffer));
+      client.println("C <br />");
+      delay(100);
+    }
+  } 
+  client.print("\nuptime: ");
+  client.println(millis());
+}

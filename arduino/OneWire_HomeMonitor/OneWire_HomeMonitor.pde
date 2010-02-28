@@ -54,7 +54,7 @@ byte pachubeServer[] = { 209, 40, 205, 190 };
 unsigned long lastMillis = 0;
 char buffer[32];
 int foundDevices = 0;
-char pachube_data[70];
+char csv_data[70];
 
 Server webServer(80);
 Client pachubeClient(pachubeServer, 80);
@@ -95,6 +95,7 @@ void setup()
   //seed LCD
   runNetworkA();
   runNetworkB();
+  massageVars();
   lcd4TempUpdate();
 }
 
@@ -109,8 +110,8 @@ void loop()
     runNetworkA();
     runNetworkB();
  //   hvacData();
+    massageVars();
     lcd4TempUpdate();
-    makeStrings();
     pachube_out();
   }
 }
@@ -232,61 +233,7 @@ void runNetworkB()
 //  T7temp = sensorsB.getTempF(T7);
 }
   
-  
-void WebOutputDebug(Client client)
-{
-  DeviceAddress deviceAddress;
-  
-  client.println("------- <br />");
-  client.print("Devices on netA (at boot): ");
-  client.print(sensorsA.getDeviceCount(), DEC);
-  client.println("<br />");
-  client.print("Devices on netB (at boot): ");
-  client.print(sensorsB.getDeviceCount(), DEC);
-  client.println("<br />");
 
-  // Loop through netA, print out address
-  client.println("--netA--<br />");
-  for(int i=0;i<5; i++) {
-    // Search the wire for address
-    if(sensorsA.getAddress(deviceAddress, i)) {
-      client.print("Found device ");
-      client.print(i, DEC);
-      client.print(" -- ");
-      printAddress(deviceAddress, client);
-
-      client.print(" -- temp: ");
-      client.print(dtostrf(sensorsA.getTempF(deviceAddress), 5, 2, buffer));
-      client.print("F, ");
-      client.print(dtostrf(sensorsA.getTempC(deviceAddress), 5, 2, buffer));
-      client.println("C <br />");
-    }
-  } 
-  // Loop through netB, print out address
-  client.println("--netB--<br />");
-  for(int i=0;i<10; i++) {
-    // Search the wire for address
-    if(sensorsB.getAddress(deviceAddress, i)) {
-      client.print("Found device ");
-      client.print(i, DEC);
-      client.print(" -- ");
-      printAddress(deviceAddress, client);
-      
-      delay(100);
-
-      client.print(" -- temp: ");
-      client.print(dtostrf(sensorsB.getTempF(deviceAddress), 5, 2, buffer));
-      client.print("F, ");
-      client.print(dtostrf(sensorsB.getTempC(deviceAddress), 5, 2, buffer));
-      client.println("C <br />");
-      delay(100);
-    }
-  } 
-  client.print("last pachube_data: ");
-  client.println(pachube_data);
-  client.print("\nuptime: ");
-  client.println(millis());
-}
 /*
 void hvacData()
 {
@@ -299,8 +246,8 @@ void hvacData()
     hvacVal = -10;
 }*/
 
-void makeStrings()
-{ //dtostrf(T6temp, 4, 1, buffer)
+void massageVars()
+{
   strcpy(T1tempS, dtostrf(T1temp, 4, 1, buffer));
   strcpy(T2tempS, dtostrf(T2temp, 4, 1, buffer));
   strcpy(T3tempS, dtostrf(T3temp, 4, 1, buffer));
@@ -311,6 +258,10 @@ void makeStrings()
   strcpy(T8tempS, dtostrf(T8temp, 4, 1, buffer));
   strcpy(T9tempS, dtostrf(T9temp, 4, 1, buffer));
   strcpy(T10tempS, dtostrf(T10temp, 4, 1, buffer));
+  
+  sprintf(csv_data, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", 
+  T1tempS,T2tempS,T3tempS,T4tempS,T5tempS,T6tempS,T7tempS,T8tempS,T9tempS,T10tempS
+  );
 }
 
 // print a device address to serial
