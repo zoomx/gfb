@@ -13,7 +13,8 @@ DeviceAddress KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-reading	KEYWORD2
+begin	KEYWORD2
+measure	KEYWORD2
 voltChA	KEYWORD2
 voltChB	KEYWORD2
 voltChC	KEYWORD2
