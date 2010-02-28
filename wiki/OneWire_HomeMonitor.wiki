@@ -19,7 +19,11 @@ The data currently is being sent to [http://www.pachube.com pachube] as a [http:
 
  * [http://www.maxim-ic.com/products/1-wire/ Maxim-IC DS18B20, DS18S20, DS18B20P one-wire thermometers] - Stick with the DS18B20 or DS18B20P version, the DS18S20 is not really worth the trouble.
 
+ * [http://www.maxim-ic.com/products/1-wire/ Maxim-IC DS2450 one-wire Quad A/D] - Will be measuring voltages on my thermostat triggers to log when its heating/cooling. See my arduino library below.
+
  * [http://www.hobby-boards.com/catalog/product_info.php?cPath=25_28&products_id=48 Hobby-Boards temp circuit boards] - These are really nice though I wish they werent restricted to parasite power for the ds18's :(
+
+ * [http://www.hobby-boards.com/catalog/product_info.php?cPath=23&products_id=1561 Hobby-Boards 6-Channel Hub] - Will probably be implementing this to simplify things a bit. Less messing with additional arduino pins... well, ok, not really sure why I bother :)
 
  * [http://www.sparkfun.com/commerce/product_info.php?products_id=462 Sparkfun 4x20 LCD w SerLCD backpack] - Pretty nice serial interface to the HD44780 on the lcd
 
@@ -31,6 +35,10 @@ The data currently is being sent to [http://www.pachube.com pachube] as a [http:
  * [http://www.arduino.cc/playground/Learning/SparkFunSerLCD SparkFunSerLCD Library]
 
  * [http://code.google.com/p/tinkerit/source/browse/#svn/trunk/Ethernet2 Ethernet2 Library] - This is older than the current arduino Ethernet library but seems to work better. Not sure whats going on here :(
+
+ * [http://code.google.com/p/gfb/source/browse/#svn/arduino/DS2450 DS2450 library] - To use above Quad A/D with arduino.
+
+ * [http://code.google.com/p/gfb/source/browse/#svn/arduino/DS2409 DS2409 library] - For one-wire switches similar to the [http://www.hobby-boards.com/catalog/product_info.php?cPath=23&products_id=1561 Hobby-Boards 6-Channel Hub]
 
 =Notes=
  * Use a 2k2 Ohm resistor and NOT the 4k7 that Maxim suggests. 4k7 works on their master chips, but the ATmega328/168 requires less to do a proper pull-up. See pg321 of [http://www.atmel.com/dyn/resources/prod_documents/doc8161.pdf ATmega328P Datasheet]
