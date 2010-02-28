@@ -21,7 +21,7 @@
 #include <DallasTemperature.h>
 #include <SoftwareSerial.h>
 #include <SparkFunSerLCD.h>
-#include <DS2450.h>
+//#include <DS2450.h>
 
 #define LCD_REFRESH 10000 // NO FASTER THAN 5s!!
 #define REZ 9
@@ -38,18 +38,13 @@ DallasTemperature sensorsA(&oneWireA);
 OneWire oneWireB(6);
 DallasTemperature sensorsB(&oneWireB);
 
-// Setup 2450
-//ds2450 hvacMon(&oneWireA);
-
 // Setup LCD
 SparkFunSerLCD lcd(5,4,20);
 
 
 DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
-//DeviceAddress HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
 float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
 char T1tempS[6], T2tempS[6], T3tempS[6], T4tempS[6], T5tempS[6], T6tempS[6], T7tempS[6], T8tempS[6], T9tempS[6], T10tempS[6];
-//char* T1tempS, T2tempS, T3tempS, T4tempS, T5tempS, T6tempS, T7tempS, T8tempS, T9tempS, T10tempS;
 int hvacVal = 0;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -61,14 +56,21 @@ char buffer[32];
 int foundDevices = 0;
 char pachube_data[70];
 
-Server server(80);
+Server webServer(80);
 Client pachubeClient(pachubeServer, 80);
+
+/*
+//DS2450 - HVAC monitor
+DeviceAddress HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
+// Setup 2450 - network, address, vrange, rez, parasite, vdiv
+ds2450 hvacMon(&oneWireA, HVAC, 0, 8, 1, 0.9);
+*/
 
 
 void setup()
 {
   Ethernet.begin(mac, ip);
-  server.begin();
+  webServer.begin();
   sensorsA.begin();
   sensorsB.begin();
   lcd.setup();
@@ -89,9 +91,6 @@ void setup()
   T9 = { 0x28, 0xC3, 0xAD, 0x87, 0x02, 0x00, 0x0, 0x17 }; //garage - netA
   T10 = { 0x28, 0x04, 0xB1, 0x87, 0x02, 0x0, 0x0, 0x50 }; 
   HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
-  
-  //setup 2450 - HVAC, 2.56v, 8bit, parasite, vdiv
-//  hvacMon.init(HVAC, 0, 8, 1, 0.9);
   
   //seed LCD
   runNetworkA();
@@ -132,7 +131,7 @@ boolean cycleCheck(unsigned long *lastMillis, unsigned int cycle)
 void serviceWebClient(void)
 {
   //Serial.print(".");
-  Client client = server.available();
+  Client client = webServer.available();
   if (client) {
     Serial.println("servicing web client");
     // an http request ends with a blank line
@@ -178,7 +177,6 @@ void serviceWebClient(void)
 //we know netA has only the local and lcd DS18B20's in powered mode
 void runNetworkA()
 {
-   //dtostrf(T6temp, 4, 1, buffer)
   Serial.println("in runNetworkA");
 //  sensorsA.requestTemperatures();
   //do local
@@ -192,7 +190,6 @@ void runNetworkA()
   T6temp = sensorsA.getTempF(T6);
   
   //do kitchen
-//  delay(200);
   sensorsA.setResolution(T8, REZ);
   sensorsA.requestTemperaturesByAddress(T8);
   T8temp = sensorsA.getTempF(T8);
@@ -202,7 +199,6 @@ void runNetworkA()
   sensorsA.requestTemperaturesByAddress(T9);
   T9temp = sensorsA.getTempF(T9);
   
-//  delay(200);
   //do basement
 //  sensorsA.setResolution(T10, REZ);
 //  sensorsA.requestTemperaturesByAddress(T10);
