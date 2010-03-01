@@ -1,2 +1,3 @@
+## put me in /etc/cron.d/ to start updates and generating graphs
 * * * * * onewire /opt/oneWire_rrd/oneWire_rrd.pl update >> /opt/oneWire_rrd/cron.log 2>&1
 */5 * * * * onewire /opt/oneWire_rrd/oneWire_rrd.pl graph >> /opt/oneWire_rrd/cron.log 2>&1
