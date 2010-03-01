@@ -44,7 +44,7 @@ SparkFunSerLCD lcd(5,4,20);
 
 DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
 float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
-char T1tempS[6], T2tempS[6], T3tempS[6], T4tempS[6], T5tempS[6], T6tempS[6], T7tempS[6], T8tempS[6], T9tempS[6], T10tempS[6];
+char T1tempS[8], T2tempS[8], T3tempS[8], T4tempS[8], T5tempS[8], T6tempS[8], T7tempS[8], T8tempS[8], T9tempS[8], T10tempS[8];
 int hvacVal = 0;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
