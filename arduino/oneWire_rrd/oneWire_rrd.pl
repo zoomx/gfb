@@ -2,32 +2,26 @@
 
 ## rrd created with:
 #rrdtool create ow.rrd \
-#--step '15' \
-#'DS:T1:GAUGE:30:-50:150' \
-#'DS:T2:GAUGE:30:-50:150' \
-#'DS:T3:GAUGE:30:-50:150' \
-#'DS:T4:GAUGE:30:-50:150' \
-#'DS:T5:GAUGE:30:-50:150' \
-#'DS:T6:GAUGE:30:-50:150' \
-#'DS:T7:GAUGE:30:-50:150' \
-#'DS:T8:GAUGE:30:-50:150' \
-#'DS:T9:GAUGE:30:-50:150' \
-#'DS:T10:GAUGE:30:-50:150' \
-#'DS:HVAC:GAUGE:30:-10:10' \
-#'RRA:AVERAGE:0.5:1:40320' \
-#'RRA:AVERAGE:0.5:4:525600' \
-#'RRA:AVERAGE:0.5:8:1314000' \
-#'RRA:LAST:0.5:1:40320' \
-#'RRA:LAST:0.5:4:525600' \
-#'RRA:LAST:0.5:8:1314000'
+#--step '60' \
+#'DS:T1:GAUGE:240:-50:150' \
+#'DS:T2:GAUGE:240:-50:150' \
+#'DS:T3:GAUGE:240:-50:150' \
+#'DS:T4:GAUGE:240:-50:150' \
+#'DS:T5:GAUGE:240:-50:150' \
+#'DS:T6:GAUGE:240:-50:150' \
+#'DS:T7:GAUGE:240:-50:150' \
+#'DS:T8:GAUGE:240:-50:150' \
+#'DS:T9:GAUGE:240:-50:150' \
+#'DS:T10:GAUGE:240:-50:150' \
+#'DS:HVAC:GAUGE:240:-10:10' \
+#'RRA:AVERAGE:0.5:1:1051200' \
+#'RRA:LAST:0.5:1:1051200' \
 ##
 #
-# 10 therms checked every 15 sec, -50min, 150max
-# 1 hvac checked every 15 sec, -10min (cool), 10max (heat) (0 is off)
+# 10 therms checked every 1 min, -50min, 150max
+# 1 hvac checked every 1 min, -10min (cool), 10max (heat) (0 is off)
 #
-# 15sec interval saved for 7 days
-# 1min interval saved for 1 year
-# 2min interval saved for 5 years
+# 1min interval saved for 2 years
 #
 # AVERAGE for temp, LAST for hvac
 # MIN MAX?
