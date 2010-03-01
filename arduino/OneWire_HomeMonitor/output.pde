@@ -19,7 +19,8 @@
 void WebOutputTemps(Client client)
 {
   client.print("CSV:");
-  client.println(csv_data);
+  client.print(csv_data);
+  client.println("<br />");
   client.print("T1:");
   client.print(T1temp);
   client.println("<br />");

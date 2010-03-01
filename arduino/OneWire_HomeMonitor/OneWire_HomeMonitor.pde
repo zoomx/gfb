@@ -92,6 +92,10 @@ void setup()
   T10 = { 0x28, 0x04, 0xB1, 0x87, 0x02, 0x0, 0x0, 0x50 }; 
   HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
   
+  T4temp = DEVICE_DISCONNECTED;
+  T7temp = DEVICE_DISCONNECTED;
+  T10temp = DEVICE_DISCONNECTED;
+  
   //seed LCD
   runNetworkA();
   runNetworkB();
@@ -273,4 +277,3 @@ void printAddress(DeviceAddress deviceAddress, Client client)
     client.print(".");
   }
 }
-
