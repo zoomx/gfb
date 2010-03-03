@@ -22,6 +22,7 @@
 #include <SoftwareSerial.h>
 #include <SparkFunSerLCD.h>
 //#include <DS2450.h>
+#include <DS2409.h>
 
 #define LCD_REFRESH 10000 // NO FASTER THAN 5s!!
 #define REZ 9
@@ -30,22 +31,31 @@
 #define PACHUBE_API_KEY "1ed93c2b567f6ff8bd63e708e3c62b7fbd122ed6ee3db2fd8ef1c8cfca8518bb"
 
 
+DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
+float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
+char T1tempS[8], T2tempS[8], T3tempS[8], T4tempS[8], T5tempS[8], T6tempS[8], T7tempS[8], T8tempS[8], T9tempS[8], T10tempS[8];
+int hvacVal = 0;
+DeviceAddress sw1 = { 0x1f, 0x70, 0x66, 0x05, 0x00, 0x00, 0x00, 0x2d };
+DeviceAddress sw2 = { 0x1f, 0x9d, 0x67, 0x05, 0x00, 0x00, 0x00, 0x83 };
+DeviceAddress sw3 = { 0x1f, 0x4b, 0x67, 0x05, 0x00, 0x00, 0x00, 0xf5 };
+
+
 // Setup oneWire networkA
 OneWire oneWireA(4);
 DallasTemperature sensorsA(&oneWireA);
 
-// Setup oneWire networkB
+// Setup oneWire networkB - switched network
 OneWire oneWireB(6);
 DallasTemperature sensorsB(&oneWireB);
+
+// Setup 2409 Switch
+ds2409 owSwitch(&oneWireB, sw1, sw2, sw3);
 
 // Setup LCD
 SparkFunSerLCD lcd(5,4,20);
 
 
-DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
-float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
-char T1tempS[8], T2tempS[8], T3tempS[8], T4tempS[8], T5tempS[8], T6tempS[8], T7tempS[8], T8tempS[8], T9tempS[8], T10tempS[8];
-int hvacVal = 0;
+
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte ip[] = { 192, 168, 1, 80 };
@@ -155,7 +165,7 @@ void serviceWebClient(void)
  //         hvacData();
                
           WebOutputTemps(client);
-          WebOutputDebug(client);
+//          WebOutputDebug(client);
           
           //got the data, might as well use it...
           lcd4TempUpdate();
@@ -216,6 +226,8 @@ void runNetworkA()
 void runNetworkB()
 {
   Serial.println("in runNetworkB");
+  owSwitch.port(0); // Chan1-Main
+  Serial.println("port 0");
   sensorsB.setResolution(T1, REZ);
   sensorsB.requestTemperaturesByAddress(T1);
   T1temp = sensorsB.getTempF(T1);
@@ -228,13 +240,17 @@ void runNetworkB()
   sensorsB.requestTemperaturesByAddress(T3);
   T3temp = sensorsB.getTempF(T3);
   
+  
+  owSwitch.port(2); // Chan2-Main
+  Serial.println("port 2");
+  delay(200);
 //  sensorsB.setResolution(T10, REZ);
 //  sensorsB.requestTemperaturesByAddress(T10);
 //  T10temp = sensorsB.getTempF(T10);
   
-//  sensorsB.setResolution(T7, REZ);
-//  sensorsB.requestTemperaturesByAddress(T7);
-//  T7temp = sensorsB.getTempF(T7);
+  sensorsB.setResolution(T7, REZ);
+  sensorsB.requestTemperaturesByAddress(T7);
+  T7temp = sensorsB.getTempF(T7);
 }
   
 
