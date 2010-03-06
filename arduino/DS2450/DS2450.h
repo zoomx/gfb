@@ -54,7 +54,8 @@ class ds2450
     OneWire* _wire;
     uint8_t* _deviceAddress;
     int _ChA, _ChB, _ChC, _ChD;
-    int8_t _vrange, _rez, _vdiv;
+    int8_t _vrange, _rez;
+    float _vdiv;
     float _calculateVoltage(int);
 };
 #endif
