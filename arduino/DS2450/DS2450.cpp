@@ -152,7 +152,7 @@ float ds2450::_calculateVoltage(int _val)
 {
   //if voltage range = 2.56v
   if(_vrange == 0){
-    return (float)_val / _vdiv * 0.000039;
+    return _val / _vdiv * 0.000039;
   }
   // if voltage range = 5.12v
   else if (_vrange == 1) {
