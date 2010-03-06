@@ -21,7 +21,7 @@
 #include <DallasTemperature.h>
 #include <SoftwareSerial.h>
 #include <SparkFunSerLCD.h>
-//#include <DS2450.h>
+#include <DS2450.h>
 #include <DS2409.h>
 
 #define LCD_REFRESH 10000 // NO FASTER THAN 5s!!
@@ -31,14 +31,14 @@
 #define PACHUBE_API_KEY "1ed93c2b567f6ff8bd63e708e3c62b7fbd122ed6ee3db2fd8ef1c8cfca8518bb"
 
 
-DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, HVAC;
+DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10;
 float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
 char T1tempS[8], T2tempS[8], T3tempS[8], T4tempS[8], T5tempS[8], T6tempS[8], T7tempS[8], T8tempS[8], T9tempS[8], T10tempS[8];
 int hvacVal = 0;
 DeviceAddress sw1 = { 0x1f, 0x70, 0x66, 0x05, 0x00, 0x00, 0x00, 0x2d };
 DeviceAddress sw2 = { 0x1f, 0x9d, 0x67, 0x05, 0x00, 0x00, 0x00, 0x83 };
 DeviceAddress sw3 = { 0x1f, 0x4b, 0x67, 0x05, 0x00, 0x00, 0x00, 0xf5 };
-
+DeviceAddress HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x00, 0x00, 0x76 };
 
 // Setup oneWire networkA
 OneWire oneWireA(4);
@@ -50,6 +50,9 @@ DallasTemperature sensorsB(&oneWireB);
 
 // Setup 2409 Switch
 ds2409 owSwitch(&oneWireB, sw1, sw2, sw3);
+
+//Setup 2450 HVAC Monitor
+ds2450 hvacMon(&oneWireB, HVAC, 0, 8, 1, 0.09);
 
 // Setup LCD
 SparkFunSerLCD lcd(5,4,20);
@@ -85,6 +88,7 @@ void setup()
   sensorsB.begin();
   lcd.setup();
   lcd.bright(75);
+  hvacMon.begin();
   
   Serial.begin(9600);
   
@@ -96,11 +100,11 @@ void setup()
   T4 = { 0x10, 0x65, 0x37, 0xFA, 0x01, 0x08, 0x0, 0xB1 };
   T5 = { 0x28, 0xF5, 0x05, 0x06, 0x02, 0x00, 0x0, 0x13 }; //arduino local - netA
   T6 = { 0x28, 0xEB, 0xC9, 0x0E, 0x02, 0x00, 0x0, 0x44 }; //thermostat - netA
-  T7 = { 0x28, 0xB2, 0x8E, 0x87, 0x02, 0x00, 0x0, 0x0E }; //outside
+  T7 = { 0x28, 0xB2, 0x8E, 0x87, 0x02, 0x00, 0x0, 0x0E }; //decomissioned
   T8 = { 0x28, 0x6E, 0xCC, 0x89, 0x00, 0x00, 0x0, 0x87 }; //kitchen - netA
   T9 = { 0x28, 0xC3, 0xAD, 0x87, 0x02, 0x00, 0x0, 0x17 }; //garage - netA
-  T10 = { 0x28, 0x04, 0xB1, 0x87, 0x02, 0x0, 0x0, 0x50 }; 
-  HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
+  T10 = { 0x28, 0x04, 0xB1, 0x87, 0x02, 0x0, 0x0, 0x50 }; //outside
+
   
   T4temp = DEVICE_DISCONNECTED;
   T7temp = DEVICE_DISCONNECTED;
@@ -243,28 +247,44 @@ void runNetworkB()
   
   owSwitch.port(2); // Chan2-Main
   Serial.println("port 2");
-  delay(200);
-//  sensorsB.setResolution(T10, REZ);
-//  sensorsB.requestTemperaturesByAddress(T10);
-//  T10temp = sensorsB.getTempF(T10);
+//  delay(200);
+  sensorsB.setResolution(T10, REZ);
+  sensorsB.requestTemperaturesByAddress(T10);
+  T10temp = sensorsB.getTempF(T10);
   
-  sensorsB.setResolution(T7, REZ);
-  sensorsB.requestTemperaturesByAddress(T7);
-  T7temp = sensorsB.getTempF(T7);
+//  sensorsB.setResolution(T7, REZ);
+//  sensorsB.requestTemperaturesByAddress(T7);
+//  T7temp = sensorsB.getTempF(T7);
+  
+  owSwitch.port(4); // Chan3-Main
+  Serial.println("port 4");
+  hvacData();
+  
+//  owSwitch.port(0); // return to Chan1-Main for lcd - interim hack
 }
   
 
-/*
+
 void hvacData()
 {
   Serial.println("in hvacData");
   //if heating, set +10, if cooling -10
-  hvacMon.reading();
-  if(hvacMon.voltChD() >= 20)
-    hvacVal = 10;
-  else if (hvacMon.voltChC() >= 20)
+  hvacMon.measure();
+  if(hvacMon.voltChB() >= 2.0)
     hvacVal = -10;
-}*/
+  else if (hvacMon.voltChA() >= 2.0)
+    hvacVal = 10;
+  else
+    hvacVal = 0;
+/*    
+  Serial.print("hvacVal = ");
+  Serial.println(hvacVal);
+  Serial.print("ChA = ");
+  Serial.println(hvacMon.voltChA());
+  Serial.print("ChB = ");
+  Serial.println(hvacMon.voltChB());
+*/
+}
 
 void massageVars()
 {
@@ -279,8 +299,8 @@ void massageVars()
   strcpy(T9tempS, dtostrf(T9temp, 4, 1, buffer));
   strcpy(T10tempS, dtostrf(T10temp, 4, 1, buffer));
   
-  sprintf(csv_data, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", 
-  T1tempS,T2tempS,T3tempS,T4tempS,T5tempS,T6tempS,T7tempS,T8tempS,T9tempS,T10tempS
+  sprintf(csv_data, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d", 
+  T1tempS,T2tempS,T3tempS,T4tempS,T5tempS,T6tempS,T7tempS,T8tempS,T9tempS,T10tempS,hvacVal
   );
 }
 
