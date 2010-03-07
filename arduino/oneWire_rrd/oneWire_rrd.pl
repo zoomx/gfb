@@ -51,13 +51,13 @@ my $rrd = RRD::Simple->new(
 if ( defined $ARGV[0] ) {
   if ( $ARGV[0] eq "graph" ) {
     print "generating graphs...\n";
-    GraphRRD('end-1hour', 'now', "$htdocs/ow-1hourly.png", 'Hourly');
-    GraphRRD('end-6hour', 'now', "$htdocs/ow-6hourly.png", '6Hour');
-    GraphRRD('end-12hour', 'now', "$htdocs/ow-12hourly.png", '12Hour');
-    GraphRRD('end-1day', 'now', "$htdocs/ow-daily.png", 'Daily');
-    GraphRRD('end-1week', 'now', "$htdocs/ow-weekly.png", 'Weekly');
-    GraphRRD('end-1month', 'now', "$htdocs/ow-monthly.png", 'Monthly');
-    GraphRRD('end-1year', 'now', "$htdocs/ow-yearly.png", 'Yearly');
+    GraphRRD('end-1hour', 'now', "$htdocs/ow-1hourly.png", 'Temperature - Last Hour');
+    GraphRRD('end-6hour', 'now', "$htdocs/ow-6hourly.png", 'Temperature - Last 6 Hours');
+    GraphRRD('end-12hour', 'now', "$htdocs/ow-12hourly.png", 'Temperature - Last 12 Hours');
+    GraphRRD('end-1day', 'now', "$htdocs/ow-daily.png", 'Temperature - Last 24 Hours');
+    GraphRRD('end-1week', 'now', "$htdocs/ow-weekly.png", 'Temperature - Last 7 Days');
+    GraphRRD('end-1month', 'now', "$htdocs/ow-monthly.png", 'Temperature - Last 30 Days');
+    GraphRRD('end-1year', 'now', "$htdocs/ow-yearly.png", 'Temperature - Past Year');
   }
 
   elsif ( $ARGV[0] eq "update" ) {
@@ -122,7 +122,9 @@ sub updateRRD {
         T7=>$TData[6],
         T8=>$TData[7],
         T9=>$TData[8],
-        T10=>$TData[9]
+        T10=>$TData[9],
+#        HVAC=>'NaN'
+        HVAC=>$TData[10]
     );
 }
 
@@ -130,8 +132,8 @@ sub updateRRD {
 sub GraphRRD {
   my ( $starttime, $endtime, $ofname, $title ) = @_;
 
-  RRDp::start "$rrdtool";
-  RRDp::cmd "last $db";
+  RRDp::start $rrdtool;
+  RRDp::cmd ("last $db");
   my $lastupdate = RRDp::read;
 
   my $timefmt = '%a %d/%b/%Y %T %Z';
@@ -141,85 +143,92 @@ sub GraphRRD {
   my $gtime = sprintf('Graph last updated: %s\r', strftime($timefmt,localtime(time)));
   $gtime =~ s/:/\\:/g;
 
-  RRDp::cmd
-    "graph $ofname --imgformat PNG",
-    "--start '$starttime' --end '$endtime'",
-    "--width $width --height $height",
-    "--slope-mode",
-    "--title $title",
-    "--vertical-label 'Degrees (F)'",
-    "DEF:T1=$db:T1:AVERAGE",
-    "DEF:T2=$db:T2:AVERAGE",
-    "DEF:T3=$db:T3:AVERAGE",
-    "DEF:T4=$db:T4:AVERAGE",
-    "DEF:T5=$db:T5:AVERAGE",
-    "DEF:T6=$db:T6:AVERAGE",
-    "DEF:T7=$db:T7:AVERAGE",
-    "DEF:T8=$db:T8:AVERAGE",
-    "DEF:T9=$db:T9:AVERAGE",
-    "DEF:T10=$db:T10:AVERAGE",
+  RRDp::cmd(
+    "graph $ofname --imgformat PNG
+    --start $starttime --end $endtime
+    --width $width --height $height
+    --slope-mode
+    --title '$title'
+    --vertical-label 'Degrees (F)'
+    DEF:T1=$db:T1:AVERAGE
+    DEF:T2=$db:T2:AVERAGE
+    DEF:T3=$db:T3:AVERAGE
+    DEF:T4=$db:T4:AVERAGE
+    DEF:T5=$db:T5:AVERAGE
+    DEF:T6=$db:T6:AVERAGE
+    DEF:T7=$db:T7:AVERAGE
+    DEF:T8=$db:T8:AVERAGE
+    DEF:T9=$db:T9:AVERAGE
+    DEF:T10=$db:T10:AVERAGE
+    DEF:HVAC=$db:HVAC:AVERAGE",
 #line1
-    "COMMENT:\"       \"",
-    "COMMENT:\"             Min       Max      Avg      Last\"",
-    "COMMENT:\"            \"",
-    "COMMENT:\"             Min       Max      Avg      Last\\n\"",
+    "COMMENT:'       '
+    COMMENT:'             Min       Max      Avg      Last'
+    COMMENT:'            '
+    COMMENT:'             Min       Max      Avg      Last\\n'",
 #line2
-    "COMMENT:\"     \"",
-    "LINE2:T1#FF8000:'Attic     '",
-    "GPRINT:T1:MIN:\"%5.2lf F\"",
-    "GPRINT:T1:MAX:\"%5.2lf F\"",
-    "GPRINT:T1:AVERAGE:\"%5.2lf F\"",
-    "GPRINT:T1:LAST:\"%5.2lf F\"",
-    "COMMENT:\"      \"",
-    "LINE2:T5#008000:'Utility Room'",
-    "GPRINT:T5:MIN:\"%5.2lf F\"",
-    "GPRINT:T5:MAX:\"%5.2lf F\"",
-    "GPRINT:T5:AVERAGE:\"%5.2lf F\"",
-    "GPRINT:T5:LAST:\"%5.2lf F\\n\"",
+    "COMMENT:'     '
+    LINE2:T1#FF8000:'Attic     '
+    GPRINT:T1:MIN:'%5.2lf F'
+    GPRINT:T1:MAX:'%5.2lf F'
+    GPRINT:T1:AVERAGE:'%5.2lf F'
+    GPRINT:T1:LAST:'%5.2lf F'
+    COMMENT:'      '
+    LINE2:T5#008000:'Utility Room'
+    GPRINT:T5:MIN:'%5.2lf F'
+    GPRINT:T5:MAX:'%5.2lf F'
+    GPRINT:T5:AVERAGE:'%5.2lf F'
+    GPRINT:T5:LAST:'%5.2lf F\\n'",
 #line3
-    "COMMENT:\"     \"",
-    "LINE2:T3#804099:'Master Bed'",
-    "GPRINT:T3:MIN:\"%5.2lf F\"",
-    "GPRINT:T3:MAX:\"%5.2lf F\"",
-    "GPRINT:T3:AVERAGE:\"%5.2lf F\"",
-    "GPRINT:T3:LAST:\"%5.2lf F\"",
-    "COMMENT:\"      \"",
-    "LINE2:T2#c0b000:'Basement    '",
-    "GPRINT:T2:MIN:\"%5.2lf F\"",
-    "GPRINT:T2:MAX:\"%5.2lf F\"",
-    "GPRINT:T2:AVERAGE:\"%5.2lf F\"",
-    "GPRINT:T2:LAST:\"%5.2lf F\\n\"",
+    "COMMENT:'     '
+    LINE2:T3#804099:'Master Bed'
+    GPRINT:T3:MIN:'%5.2lf F'
+    GPRINT:T3:MAX:'%5.2lf F'
+    GPRINT:T3:AVERAGE:'%5.2lf F'
+    GPRINT:T3:LAST:'%5.2lf F'
+    COMMENT:'      '
+    LINE2:T2#c0b000:'Basement    '
+    GPRINT:T2:MIN:'%5.2lf F'
+    GPRINT:T2:MAX:'%5.2lf F'
+    GPRINT:T2:AVERAGE:'%5.2lf F'
+    GPRINT:T2:LAST:'%5.2lf F\\n'",
 #line4
-    "COMMENT:\"     \"",
-    "LINE2:T6#000090:'Thermostat'",
-    "GPRINT:T6:MIN:\"%5.2lf F\"",
-    "GPRINT:T6:MAX:\"%5.2lf F\"",
-    "GPRINT:T6:AVERAGE:\"%5.2lf F\"",
-    "GPRINT:T6:LAST:\"%5.2lf F\"",
-    "COMMENT:\"      \"",
-    "LINE2:T9#000000:'Garage      '",
-    "GPRINT:T9:MIN:\"%5.2lf F\"",
-    "GPRINT:T9:MAX:\"%5.2lf F\"",
-    "GPRINT:T9:AVERAGE:\"%5.2lf F\"",
-    "GPRINT:T9:LAST:\"%5.2lf F\\n\"",
+    "COMMENT:'     '
+    LINE2:T6#000090:'Thermostat'
+    GPRINT:T6:MIN:'%5.2lf F'
+    GPRINT:T6:MAX:'%5.2lf F'
+    GPRINT:T6:AVERAGE:'%5.2lf F'
+    GPRINT:T6:LAST:'%5.2lf F'
+    COMMENT:'      '
+    LINE2:T9#000000:'Garage      '
+    GPRINT:T9:MIN:'%5.2lf F'
+    GPRINT:T9:MAX:'%5.2lf F'
+    GPRINT:T9:AVERAGE:'%5.2lf F'
+    GPRINT:T9:LAST:'%5.2lf F\\n'",
 #line5
-    "COMMENT:\"     \"",
-    "LINE2:T8#a02020:'Kitchen   '",
-    "GPRINT:T8:MIN:\"%5.2lf F\"",
-    "GPRINT:T8:MAX:\"%5.2lf F\"",
-    "GPRINT:T8:AVERAGE:\"%5.2lf F\"",
-    "GPRINT:T8:LAST:\"%5.2lf F\"",
-    "COMMENT:\"      \"",
-    "LINE2:T10#4575d7:'Outside     '",
-    "GPRINT:T10:MIN:\"%5.2lf F\"",
-    "GPRINT:T10:MAX:\"%5.2lf F\"",
-    "GPRINT:T10:AVERAGE:\"%5.2lf F\"",
-    "GPRINT:T10:LAST:\"%5.2lf F\\n\"",
-    "COMMENT:\"\\s\"",
+    "COMMENT:'     '
+    LINE2:T8#a02020:'Kitchen   '
+    GPRINT:T8:MIN:'%5.2lf F'
+    GPRINT:T8:MAX:'%5.2lf F'
+    GPRINT:T8:AVERAGE:'%5.2lf F'
+    GPRINT:T8:LAST:'%5.2lf F'
+    COMMENT:'      '
+    LINE2:T10#4575d7:'Outside     '
+    GPRINT:T10:MIN:'%5.2lf F'
+    GPRINT:T10:MAX:'%5.2lf F'
+    GPRINT:T10:AVERAGE:'%5.2lf F'
+    GPRINT:T10:LAST:'%5.2lf F\\n'
+    COMMENT:'\\s'",
 #line6
-    "COMMENT:\"$gtime\"",
-    "COMMENT:\"$rtime\""
-;
+    "CDEF:heat=T6,10,EQ,T6,NaN,IF
+    CDEF:cool=T6,-10,EQ,T6,NaN,IF
+    COMMENT:'     '
+    AREA:heat#FF5050:'Heating   '
+    AREA:cool#5050FF:'Cooling\\n'",
+#line7
+    "COMMENT:'$gtime'
+    COMMENT:'$rtime'"
+);
 
   my $answer=RRDp::read;
   RRDp::end;
