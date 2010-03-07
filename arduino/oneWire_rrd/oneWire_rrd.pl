@@ -160,7 +160,12 @@ sub GraphRRD {
     DEF:T8=$db:T8:AVERAGE
     DEF:T9=$db:T9:AVERAGE
     DEF:T10=$db:T10:AVERAGE
-    DEF:HVAC=$db:HVAC:AVERAGE",
+    DEF:HVAC=$db:HVAC:AVERAGE
+    CDEF:heat=HVAC,10,EQ,T6,NaN,IF
+    CDEF:cool=HVAC,-10,EQ,T6,NaN,IF",
+#line6
+    "AREA:heat#FFCCCC
+    AREA:cool#CCCCFF",
 #line1
     "COMMENT:'       '
     COMMENT:'             Min       Max      Avg      Last'
@@ -220,11 +225,9 @@ sub GraphRRD {
     GPRINT:T10:LAST:'%5.2lf F\\n'
     COMMENT:'\\s'",
 #line6
-    "CDEF:heat=T6,10,EQ,T6,NaN,IF
-    CDEF:cool=T6,-10,EQ,T6,NaN,IF
-    COMMENT:'     '
-    AREA:heat#FF5050:'Heating   '
-    AREA:cool#5050FF:'Cooling\\n'",
+    "COMMENT:'     '
+    LINE1:heat#FFCCCC:'Heating   '
+    LINE1:cool#CCCCFF:'Cooling\\n'",
 #line7
     "COMMENT:'$gtime'
     COMMENT:'$rtime'"
