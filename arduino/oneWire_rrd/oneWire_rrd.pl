@@ -36,7 +36,7 @@ our $remoteWeb = 'http://192.168.1.80';  # URL to get the data from
 our $height = 200;
 our $width = 800;
 
-use strict;
+#use strict;
 use RRDp;
 use RRD::Simple;
 use LWP::Simple;
@@ -74,13 +74,17 @@ if ( defined $ARGV[0] ) {
     print "Got: @TData\n";
   }
 
-    elsif ($ARGV[0] eq "info") {
-        getRRDinfo();
-    }
+  elsif ($ARGV[0] eq "info") {
+      getRRDinfo();
+  }
 
-    else {
-	usage(); 
-    }
+  elsif ($ARGV[0] eq "hvac") {
+      print "HVAC Time over past 24hrs: " . hvacTime('end-1day', 'now') . "\n";
+  }
+
+  else {
+    usage(); 
+  }
 }
 else {
     usage();
@@ -131,6 +135,28 @@ sub updateRRD {
 
 sub GraphRRD {
   my ( $starttime, $endtime, $ofname, $title ) = @_;
+
+  my $hvacPeriodTime = hvacTime($starttime, $endtime);
+  my ( $htime, $hvacAvgTime );
+
+  if ($starttime eq "end-1week") {
+    $hvacAvgTime = $hvacPeriodTime / 7;
+    $htime = sprintf('HVAC Run-Time: %dm  Avg: %dm/day\r', $hvacPeriodTime, $hvacAvgTime);
+  }
+  elsif ($starttime eq "end-1month") {
+    #this is nasty as month time changes btw 28 & 31 days
+    $hvacAvgTime = $hvacPeriodTime / 30;
+    $htime = sprintf('HVAC Run-Time: %dm  Avg: %dm/day\r', $hvacPeriodTime, $hvacAvgTime);
+  }
+  elsif ($starttime eq "end-1year") {
+    $hvacAvgTime = $hvacPeriodTime / 365;
+    $htime = sprintf('HVAC Run-Time: %dm  Avg: %dm/day\r', $hvacPeriodTime, $hvacAvgTime);
+  }
+  else {
+    $htime = sprintf('HVAC Run-Time: %dm\r', $hvacPeriodTime);
+  }
+
+  $htime =~ s/:/\\:/g; 
 
   RRDp::start $rrdtool;
   RRDp::cmd ("last $db");
@@ -230,7 +256,9 @@ sub GraphRRD {
     LINE1:cool#CCCCFF:'Cooling\\n'",
 #line7
     "COMMENT:'$gtime'
-    COMMENT:'$rtime'"
+    COMMENT:'$rtime'",
+#line8
+    "COMMENT:'$htime'"
 );
 
   my $answer=RRDp::read;
@@ -251,4 +279,23 @@ sub getRRDinfo() {
     my $info = $rrd->info;
     require Data::Dumper;
     print Data::Dumper::Dumper($info);
+}
+
+sub hvacTime {
+  my ( $starttime, $endtime ) = @_;
+  my $hvacOn = 0;
+
+  RRDp::start $rrdtool;
+  RRDp::cmd("fetch $db AVERAGE --start $starttime --end $endtime");
+  my $answer = RRDp::read;
+  my @lines = split(/\n/, $$answer);
+  RRDp::end;
+
+  foreach my $line (@lines) {
+    if ( $line =~ /1\.0000000000e\+01$/ ) {
+      $hvacOn++;
+    }
+  }
+
+  return $hvacOn;
 }
