@@ -61,7 +61,8 @@ if ( defined $ARGV[0] ) {
   }
 
   elsif ( $ARGV[0] eq "update" ) {
-      print "updating $db...";
+      my $nowtime = localtime();
+      print "nowtime -> updating $db...";
       getData();
       print "got data...";
       cleanup();
