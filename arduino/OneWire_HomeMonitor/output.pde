@@ -62,14 +62,12 @@ void lcd4TempUpdate()
   Serial.println("in lcd4TempUpdate");
   //line 1
   lcd.at(1,1, "Here:");
-//  if (sensorsA.isConnected(T6))
   if (T6temp != DEVICE_DISCONNECTED)
     lcd.at(1,6, T6tempS);
   else
     lcd.at(1,6, "---- ");
  
   lcd.at(1,11, "Util:");
-//  if (sensorsA.isConnected(T5))
   if (T5temp != DEVICE_DISCONNECTED)
     lcd.at(1,16, T5tempS);
   else
@@ -77,14 +75,12 @@ void lcd4TempUpdate()
     
   //line 2
   lcd.at(2,1, "MBed:");
-//  if (sensorsB.isConnected(T3))
   if (T3temp != DEVICE_DISCONNECTED)
     lcd.at(2,6, T3tempS);
   else
     lcd.at(2,6, "---- ");
  
   lcd.at(2,11, "Grge:");
-//  if (sensorsA.isConnected(T9))
   if (T9temp != DEVICE_DISCONNECTED)
     lcd.at(2,16, T9tempS);
   else
@@ -92,14 +88,12 @@ void lcd4TempUpdate()
     
   //line 3
   lcd.at(3,1, "Kitc:");
-//  if (sensorsA.isConnected(T8))
   if (T8temp != DEVICE_DISCONNECTED)
     lcd.at(3,6, T8tempS);
   else
     lcd.at(3,6, "---- ");
  
   lcd.at(3,11, "Bsmt:");
-//  if (sensorsB.isConnected(T2))
   if (T2temp != DEVICE_DISCONNECTED)
     lcd.at(3,16, T2tempS);
   else
@@ -107,14 +101,12 @@ void lcd4TempUpdate()
         
   //line 4
   lcd.at(4,1, "Attc:");
-//  if (sensorsB.isConnected(T1))
   if (T1temp != DEVICE_DISCONNECTED)
     lcd.at(4,6, T1tempS);
   else
     lcd.at(4,6, "---- ");
     
   lcd.at(4,11, "Out:");
-//  if (sensorsB.isConnected(T10))
   if (T10temp != DEVICE_DISCONNECTED)
     lcd.at(4,16, T10tempS);
   else

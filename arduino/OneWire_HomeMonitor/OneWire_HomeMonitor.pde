@@ -72,12 +72,6 @@ char csv_data[70];
 Server webServer(80);
 Client pachubeClient(pachubeServer, 80);
 
-/*
-//DS2450 - HVAC monitor
-DeviceAddress HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x0, 0x0, 0x76 };
-// Setup 2450 - network, address, vrange, rez, parasite, vdiv
-ds2450 hvacMon(&oneWireA, HVAC, 0, 8, 1, 0.9);
-*/
 
 
 void setup()
@@ -127,7 +121,6 @@ void loop()
     //update lcd every LCD_REFRESH seconds
     runNetworkA();
     runNetworkB();
- //   hvacData();
     massageVars();
     lcd4TempUpdate();
     pachube_out();
@@ -164,15 +157,12 @@ void serviceWebClient(void)
           client.println("Content-Type: text/html");
           client.println();
           
-          runNetworkA();
-          runNetworkB();
- //         hvacData();
+//get data only every 15s
+//          runNetworkA();
+//          runNetworkB();
                
           WebOutputTemps(client);
 //          WebOutputDebug(client);
-          
-          //got the data, might as well use it...
-          lcd4TempUpdate();
      
           break;
         }
@@ -217,11 +207,6 @@ void runNetworkA()
   sensorsA.setResolution(T9, REZ);
   sensorsA.requestTemperaturesByAddress(T9);
   T9temp = sensorsA.getTempF(T9);
-  
-  //do basement
-//  sensorsA.setResolution(T10, REZ);
-//  sensorsA.requestTemperaturesByAddress(T10);
-//  T10temp = sensorsA.getTempF(T10);
 }
 
 
@@ -247,20 +232,14 @@ void runNetworkB()
   
   owSwitch.port(2); // Chan2-Main
   Serial.println("port 2");
-//  delay(200);
   sensorsB.setResolution(T10, REZ);
   sensorsB.requestTemperaturesByAddress(T10);
   T10temp = sensorsB.getTempF(T10);
   
-//  sensorsB.setResolution(T7, REZ);
-//  sensorsB.requestTemperaturesByAddress(T7);
-//  T7temp = sensorsB.getTempF(T7);
   
   owSwitch.port(4); // Chan3-Main
   Serial.println("port 4");
   hvacData();
-  
-//  owSwitch.port(0); // return to Chan1-Main for lcd - interim hack
 }
   
 
