@@ -14,7 +14,7 @@ Includes:
  * 4 spots for local OneWire devices (2 on each network)
 
 == Want one? ==
-I ordered the boards fabbed through seeedstudio (they are great!) and got the minimum 10 boards which obviously I don't need. Let me know If you need one and I'll send it your way for oh $10? Does that sound reasonable? :)
+I ordered the boards fabbed through seeedstudio (they are great!) and got the minimum 10 boards which obviously I don't need. Let me know If you need one and I'll send it your way for oh $10? (just the board) Does that sound reasonable? :)
 
 http://lh5.ggpht.com/_IhezzMAaFLg/S_qaDs9QboI/AAAAAAAAGSg/yq6IwATng6Q/s720/IMG_0383.JPG
 http://lh5.ggpht.com/_IhezzMAaFLg/S_qbMV1BSnI/AAAAAAAAGWw/sCSc_kHTOHk/s720/IMG_0392.JPG
