@@ -27,6 +27,8 @@
 #define LCD_REFRESH 10000 // NO FASTER THAN 5s!!
 #define REZ 9
 
+#define BRIGHT 75
+
 #define PACHUBE_FEED_ID    5916
 #define PACHUBE_API_KEY "1ed93c2b567f6ff8bd63e708e3c62b7fbd122ed6ee3db2fd8ef1c8cfca8518bb"
 
@@ -62,15 +64,20 @@ SparkFunSerLCD lcd(5,4,20);
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte ip[] = { 192, 168, 1, 80 };
-byte pachubeServer[] = { 209, 40, 205, 190 };
+//byte pachubeServer[] = { 209, 40, 205, 190 }; // changed June 30th 2010
+byte pachubeServer[] = { 173, 203, 98, 29 };
+byte webCheckServer[] = { 192, 168, 1, 7 };
 
 unsigned long lastMillis = 0;
+unsigned long lastBlinkMillis = 0;
+bool blinker = true;
 char buffer[32];
 int foundDevices = 0;
 char csv_data[70];
 
 Server webServer(80);
 Client pachubeClient(pachubeServer, 80);
+Client webCheckClient(webCheckServer, 80);
 
 
 
@@ -81,7 +88,7 @@ void setup()
   sensorsA.begin();
   sensorsB.begin();
   lcd.setup();
-  lcd.bright(75);
+  lcd.bright(BRIGHT);
   hvacMon.begin();
   
   Serial.begin(9600);
@@ -116,6 +123,26 @@ void loop()
 {
   serviceWebClient();
   
+  
+  //check that the rrd site is up and blink the backlight if not
+  //make sure to leave the backlight on if the site checks out.
+  if (blinkCheck(&lastBlinkMillis, 1000)) {
+    if ( !webCheck() ) {
+      if (blinker) {
+        lcd.bright(0);
+        blinker = false;
+      }
+      else {
+        lcd.bright(BRIGHT);
+        blinker = true;
+      }
+    }
+    else {
+      lcd.bright(BRIGHT);
+    }
+  }
+    
+  
   if (cycleCheck(&lastMillis, LCD_REFRESH)) {
     Serial.println("in update cycle");
     //update lcd every LCD_REFRESH seconds
@@ -123,10 +150,20 @@ void loop()
     runNetworkB();
     massageVars();
     lcd4TempUpdate();
-    pachube_out();
+    pachube_out();      
   }
 }
 
+boolean blinkCheck(unsigned long *lastBlinkMillis, unsigned int cycle)
+{
+  unsigned long currentMillis = millis();
+  if (currentMillis - *lastBlinkMillis >= cycle) {
+    *lastBlinkMillis = currentMillis;
+    return true;
+  }
+  else
+    return false;
+}
 
 boolean cycleCheck(unsigned long *lastMillis, unsigned int cycle)
 {
@@ -282,6 +319,23 @@ void massageVars()
   T1tempS,T2tempS,T3tempS,T4tempS,T5tempS,T6tempS,T7tempS,T8tempS,T9tempS,T10tempS,hvacVal
   );
 }
+
+
+bool webCheck()
+{
+  Serial.print("Checking RRD site... ");
+  if (webCheckClient.connect()) {
+    Serial.println("connected");
+    webCheckClient.stop();
+    return true;
+  }
+  else {
+    Serial.println("rrd site unavailable!");
+    webCheckClient.stop();
+    return false;
+  }
+}
+
 
 // print a device address to serial
 void printAddress(DeviceAddress deviceAddress, Client client)
