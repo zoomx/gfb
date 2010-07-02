@@ -124,6 +124,8 @@ void loop()
   serviceWebClient();
   
   
+  /* arduino ethernet client code rather unstable and this causes issues
+  
   //check that the rrd site is up and blink the backlight if not
   //make sure to leave the backlight on if the site checks out.
   if (blinkCheck(&lastBlinkMillis, 1000)) {
@@ -141,6 +143,8 @@ void loop()
       lcd.bright(BRIGHT);
     }
   }
+  */
+  
     
   
   if (cycleCheck(&lastMillis, LCD_REFRESH)) {
