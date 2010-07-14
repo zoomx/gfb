@@ -54,6 +54,12 @@ void WebOutputTemps(Client client)
   client.print("HVAC:");
   client.print(hvacVal);
   client.println("<br />");  
+  client.print("H1temp:");
+  client.print(H1temp);
+  client.println("<br />");
+  client.print("H1hum:");
+  client.print(H1hum);
+  client.println("<br />");
 }
 
 
@@ -92,13 +98,20 @@ void lcd4TempUpdate()
     lcd.at(3,6, T8tempS);
   else
     lcd.at(3,6, "---- ");
- 
+ /*
   lcd.at(3,11, "Bsmt:");
   if (T2temp != DEVICE_DISCONNECTED)
     lcd.at(3,16, T2tempS);
   else
     lcd.at(3,16, "---- ");
-        
+   */
+  lcd.at(3,11, "Bsmt:");
+  if (H1temp != DEVICE_DISCONNECTED)
+    lcd.at(3,16, H1tempS);
+  else
+    lcd.at(3,16, "---- ");
+
+   
   //line 4
   lcd.at(4,1, "Attc:");
   if (T1temp != DEVICE_DISCONNECTED)

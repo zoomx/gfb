@@ -23,8 +23,10 @@
 #include <SparkFunSerLCD.h>
 #include <DS2450.h>
 #include <DS2409.h>
+#include <DS2438.h>
 
 #define LCD_REFRESH 10000 // NO FASTER THAN 5s!!
+#define LCD_BLANK 60000 //clear lcd once per minute
 #define REZ 9
 
 #define BRIGHT 75
@@ -34,13 +36,14 @@
 
 
 DeviceAddress T1, T2, T3, T4, T5, T6, T7, T8, T9, T10;
-float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp;
-char T1tempS[8], T2tempS[8], T3tempS[8], T4tempS[8], T5tempS[8], T6tempS[8], T7tempS[8], T8tempS[8], T9tempS[8], T10tempS[8];
+float T1temp, T2temp, T3temp, T4temp, T5temp, T6temp, T7temp, T8temp, T9temp, T10temp, H1hum, H1temp;
+char T1tempS[8], T2tempS[8], T3tempS[8], T4tempS[8], T5tempS[8], T6tempS[8], T7tempS[8], T8tempS[8], T9tempS[8], T10tempS[8], H1humS[8], H1tempS[8];
 int hvacVal = 0;
 DeviceAddress sw1 = { 0x1f, 0x70, 0x66, 0x05, 0x00, 0x00, 0x00, 0x2d };
 DeviceAddress sw2 = { 0x1f, 0x9d, 0x67, 0x05, 0x00, 0x00, 0x00, 0x83 };
 DeviceAddress sw3 = { 0x1f, 0x4b, 0x67, 0x05, 0x00, 0x00, 0x00, 0xf5 };
 DeviceAddress HVAC = { 0x20, 0x6F, 0xCD, 0x13, 0x0, 0x00, 0x00, 0x76 };
+DeviceAddress HUM1 = { 0x26, 0xC3, 0xD8, 0x0B, 0x01, 0x00, 0x00, 0xF8 };
 
 // Setup oneWire networkA
 OneWire oneWireA(4);
@@ -56,6 +59,9 @@ ds2409 owSwitch(&oneWireB, sw1, sw2, sw3);
 //Setup 2450 HVAC Monitor
 ds2450 hvacMon(&oneWireB, HVAC, 0, 8, 1, 0.09);
 
+//Setup 2438 Humidistat
+ds2438 humidity1(&oneWireB, HUM1);
+
 // Setup LCD
 SparkFunSerLCD lcd(5,4,20);
 
@@ -68,8 +74,8 @@ byte ip[] = { 192, 168, 1, 80 };
 byte pachubeServer[] = { 173, 203, 98, 29 };
 byte webCheckServer[] = { 192, 168, 1, 7 };
 
-unsigned long lastMillis = 0;
-unsigned long lastBlinkMillis = 0;
+unsigned long lastUpdateMillis = 0;
+unsigned long lastBlankMillis = 0;
 bool blinker = true;
 char buffer[32];
 int foundDevices = 0;
@@ -90,13 +96,15 @@ void setup()
   lcd.setup();
   lcd.bright(BRIGHT);
   hvacMon.begin();
+  humidity1.writeSetup(0x00);
   
   Serial.begin(9600);
   
   //0x10 == DS18S20  //0x28 == DS18B20
   //0x20 == DS2450   //0x1f == DS2409
+  //0x26 == DS2438
   T1 = { 0x28, 0x38, 0x8C, 0x87, 0x02, 0x00, 0x0, 0xA8 }; //Attic
-  T2 = { 0x28, 0x22, 0x8E, 0x87, 0x02, 0x00, 0x0, 0xBF }; //basement
+//  T2 = { 0x28, 0x22, 0x8E, 0x87, 0x02, 0x00, 0x0, 0xBF }; //basement
   T3 = { 0x28, 0xED, 0x89, 0x87, 0x02, 0x00, 0x0, 0x55 }; //Master Bed
   T4 = { 0x10, 0x65, 0x37, 0xFA, 0x01, 0x08, 0x0, 0xB1 };
   T5 = { 0x28, 0xF5, 0x05, 0x06, 0x02, 0x00, 0x0, 0x13 }; //arduino local - netA
@@ -110,6 +118,7 @@ void setup()
   T4temp = DEVICE_DISCONNECTED;
   T7temp = DEVICE_DISCONNECTED;
   T10temp = DEVICE_DISCONNECTED;
+  T2temp = DEVICE_DISCONNECTED;
   
   //seed LCD
   runNetworkA();
@@ -147,8 +156,11 @@ void loop()
   
     
   
-  if (cycleCheck(&lastMillis, LCD_REFRESH)) {
+  if (cycleCheck(&lastUpdateMillis, LCD_REFRESH)) {
     Serial.println("in update cycle");
+    //clear lcd once per minute
+    if (cycleCheck(&lastBlankMillis, LCD_BLANK)) lcd.empty();
+    
     //update lcd every LCD_REFRESH seconds
     runNetworkA();
     runNetworkB();
@@ -158,16 +170,6 @@ void loop()
   }
 }
 
-boolean blinkCheck(unsigned long *lastBlinkMillis, unsigned int cycle)
-{
-  unsigned long currentMillis = millis();
-  if (currentMillis - *lastBlinkMillis >= cycle) {
-    *lastBlinkMillis = currentMillis;
-    return true;
-  }
-  else
-    return false;
-}
 
 boolean cycleCheck(unsigned long *lastMillis, unsigned int cycle)
 {
@@ -262,9 +264,14 @@ void runNetworkB()
   sensorsB.requestTemperaturesByAddress(T1);
   T1temp = sensorsB.getTempF(T1);
   
+  /*
   sensorsB.setResolution(T2, REZ);
   sensorsB.requestTemperaturesByAddress(T2);
   T2temp = sensorsB.getTempF(T2);
+  */
+  
+  H1temp = humidity1.readTempF();
+  H1hum = humidity1.readHum();
   
   sensorsB.setResolution(T3, REZ);
   sensorsB.requestTemperaturesByAddress(T3);
@@ -319,8 +326,11 @@ void massageVars()
   strcpy(T9tempS, dtostrf(T9temp, 4, 1, buffer));
   strcpy(T10tempS, dtostrf(T10temp, 4, 1, buffer));
   
-  sprintf(csv_data, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d", 
-  T1tempS,T2tempS,T3tempS,T4tempS,T5tempS,T6tempS,T7tempS,T8tempS,T9tempS,T10tempS,hvacVal
+  strcpy(H1tempS, dtostrf(H1temp, 4, 1, buffer));
+  strcpy(H1humS, dtostrf(H1hum, 4, 1, buffer));
+  
+  sprintf(csv_data, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s", 
+  T1tempS,T2tempS,T3tempS,T4tempS,T5tempS,T6tempS,T7tempS,T8tempS,T9tempS,T10tempS,hvacVal,H1tempS,H1humS
   );
 }
 
