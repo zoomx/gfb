@@ -73,9 +73,9 @@ void lcd4TempUpdate()
   else
     lcd.at(1,6, "---- ");
  
-  lcd.at(1,11, "Util:");
-  if (T5temp != DEVICE_DISCONNECTED)
-    lcd.at(1,16, T5tempS);
+  lcd.at(1,11, "HumD:");
+  if (H1hum != DEVICE_DISCONNECTED)
+    lcd.at(1,16, H1humS);
   else
     lcd.at(1,16, "---- ");
     
