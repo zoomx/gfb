@@ -18,7 +18,8 @@ odd libtool issues resolved by resetting libtool with 'libtoolize --force --copy
   * rrdtool-1.4.5
 lots of dependencies, follow http://oss.oetiker.ch/rrdtool/doc/rrdbuild.en.html
 set:
-export PKG_CONFIG_PATH=/home/gfbarros/libs/lib/pkgconfig
+export PKG_CONFIG_PATH=/home/gfb/libs/lib/pkgconfig
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/gfb/libs/lib
 LDFLAGS=-Wl,--rpath -Wl,/home/gfb/libs/ -L/home/gfb/libs/
 CPPFLAGS=-I/home/gfb/libs/include
 put all libs in one spot to move to chumby
