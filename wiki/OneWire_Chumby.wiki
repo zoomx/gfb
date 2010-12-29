@@ -1,0 +1,36 @@
+#summary Using the Chumby Silvermoon platform as a OneWire system
+
+= Introduction =
+
+Best Buy Insignia Infocast 8" Chumby @ $67, $60 open box
+Link45 Serial OneWire Adapter
+USB->Serial Adapter
+
+= HW Details =
+http://wiki.chumby.com/mediawiki/index.php/Main_Page
+
+= Software =
+  * use scratchbox to cross-compile for arm platform
+
+  * owfs-2.5p2
+odd libtool issues resolved by resetting libtool with 'libtoolize --force --copy; aclocal; autoconf; automake'
+
+  * rrdtool-1.4.5
+lots of dependencies, follow http://oss.oetiker.ch/rrdtool/doc/rrdbuild.en.html
+set:
+LDFLAGS=-Wl,--rpath -Wl,/home/gfb/libs/ -L/home/gfb/libs/
+CPPFLAGS=-I/home/gfb/libs/include
+put all libs in one spot to move to chumby
+
+freetype needs builds/unix/unix-cc.mk fixed with --tag:
+CC    := $(LIBTOOL) --tag=CC --mode=compile $(CCraw)
+LINK_LIBRARY = $(LIBTOOL) --tag=CC --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
+
+
+
+= Links =
+http://wiki.chumby.com/mediawiki/index.php/Main_Page
+http://www.bunniestudios.com/blog/?cat=2&paged=6
+http://owfs.org
+http://www.scratchbox.org/documentation/user/scratchbox-1.0/html/installdoc.html
+http://developer.mysmartgrid.de/doku.php?id=chumbycurrentcosthowto
