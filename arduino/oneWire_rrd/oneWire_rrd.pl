@@ -1,29 +1,11 @@
 #!/psp/usr/bin/perl
 
-## original rrd created with:
-#rrdtool create ow.rrd \
-#--step '60' \
-#'DS:T1:GAUGE:240:-50:150' \
-#'DS:T2:GAUGE:240:-50:150' \
-#'DS:T3:GAUGE:240:-50:150' \
-#'DS:T4:GAUGE:240:-50:150' \
-#'DS:T5:GAUGE:240:-50:150' \
-#'DS:T6:GAUGE:240:-50:150' \
-#'DS:T7:GAUGE:240:-50:150' \
-#'DS:T8:GAUGE:240:-50:150' \
-#'DS:T9:GAUGE:240:-50:150' \
-#'DS:T10:GAUGE:240:-50:150' \
-#'DS:HVAC:GAUGE:240:-10:10' \
-#'RRA:AVERAGE:0.5:1:1051200' \
-#'RRA:LAST:0.5:1:1051200' \
-##
-#
 # 10 therms checked every 1 min, -50min, 150max
 # 1 hvac checked every 1 min, -10min (cool), 10max (heat) (0 is off)
 #
 # 1min interval saved for 2 years
 #
-## new rrd created with:
+## rrd created with:
 #rrdtool create filename.rrd \
 #--step '60' \
 #--start '1230768000' \
@@ -45,6 +27,13 @@
 #'RRA:AVERAGE:0.5:60:26280' \
 #'RRA:MIN:0.5:60:26280' \
 #'RRA:MAX:0.5:60:26280'
+#
+## hvac stats rrd:
+#rrdtool create filename.rrd \
+#--step '60' \
+#--start '1230768000' \
+#'DS:HVAC:GAUGE:120:-10:10' \
+#'RRA:LAST:0.5:1:525600'
 
 #  T1 =  Attic
 #  T2 =  Basement
@@ -59,12 +48,12 @@
 #  HVAC = hvac status
 
 
-$base_path = "/mnt/usb/oneWire_rrd";      # main app path
-our $rrdtool = "/mnt/usb/rrdtool/bin/rrdtool";    # rrdtool binary
-our $db = "$base_path/ow.rrd";        # path to rrd file                          
-our $hvacdb = "$base_path/ow.rrd";    # path to rrd file with hvac historical data
-our $rawdb = "$base_path/ow.raw";     # path to raw file
-our $htdocs = "$base_path/www";       # directory where the graphs will end up
+$base_path = "/mnt/usb/oneWire_rrd";			# base app path
+our $rrdtool = "/mnt/usb/rrdtool/bin/rrdtool";	# rrdtool binary
+our $db = "$base_path/ow.rrd";					# path to rrd file                          
+our $hvacdb = "$base_path/hvacStats.rrd";		# path to rrd file with hvac historical data
+our $rawdb = "$base_path/ow.raw";				# path to raw file
+our $htdocs = "$base_path/www";					# directory where the graphs will end up
 our $remoteWeb = 'http://127.0.0.1/cgi-bin/getTemps.pl';  # URL to get the data from
 
 our $height = 200;
@@ -81,24 +70,29 @@ our @TData; #where we store data (for now)
 our %temps; #key=name_of_temp, value=temp_or_hum
 our %hvac; #store hvac info like status, times, etc
 
-my $rrd = RRD::Simple->new(
+# open hvac rrd for function use
+our $hvacrrd = RRD::Simple->new(
+    file => $hvacdb,
+    on_missing_ds => "die" 
+);
+
+# open main rrd for function use
+our $mainrrd = RRD::Simple->new(
     file => $db,
-    on_missing_ds => "die" );
+    on_missing_ds => "die" 
+);
 
 if ( defined $ARGV[0] ) {
   if ( $ARGV[0] eq "graph" ) {
       GraphChumby();
       GraphWeb();
   }
-
   elsif ( $ARGV[0] eq "chumby" ) {
       GraphChumby();
   }
-  
   elsif ( $ARGV[0] eq "webgraph" ) {
       GraphWeb();
   }
-  
   elsif ( $ARGV[0] eq "update" ) {
       my $nowtime = localtime();
       print "$nowtime -> updating $db...";
@@ -109,20 +103,16 @@ if ( defined $ARGV[0] ) {
       updateRAW();
       print "updated!\n";
   }
-
   elsif ( $ARGV[0] eq "webdump" ) {
       getData();
       print "Got: @TData\n";
   }
-
   elsif ($ARGV[0] eq "info") {
       getRRDinfo();
   }
-
   elsif ($ARGV[0] eq "hvac") {
       print "HVAC Time over past 24hrs: " . hvacTime('end-1day', 'now', 'both') . "\n";
   }
-
   else {
       usage(); 
   }
@@ -139,11 +129,12 @@ sub usage {
     print "   update   - Reads data, inserts into rrd file\n";
     print "   webdump  - Reads data, dumps to console\n";
     print "   info     - Dumps rrd info to console\n";
-    print "   hvac     - HVAC runtime over last 24hrs\n";
+    print "   hvac     - HVAC runtime stats\n";
 }
 
 
 sub getData {
+# grab data from website and push into hash
     my $content = get $remoteWeb;
     die "Couldn't get $remoteWeb" unless defined $content;
 
@@ -155,19 +146,22 @@ sub getData {
             
             #pull out non-temp values! (HVACstatus value is text)
             if ($key ne 'HVACstatus') { $temps{$key} = $value; }
-            else { $hvac{status} = $value; }
+            else { 
+            	if ($value eq "heating") { $hvac{status} = 10; }
+            	elsif ($value eq "cooling") { $hvac{status} = -10; }
+            }
         }
         #trim to to 2 decimal places - worth looking into rounding later
         #FUTUREFEATURE                                       
         foreach my $key (keys %temps) {                  
-            $temps{$key} = sprintf("%.2f", $temps{$key});               
+            $temps{$key} = sprintf("%.2f", $temps{$key});          
         } 
     }
 }
 
-
 sub updateRRD {
-    $rrd->update(
+# update main rrd with current data.
+    $mainrrd->update(
         T1=>$temps{Attic},
         T2=>$temps{Basement},
         T3=>$temps{MasterBed},
@@ -185,19 +179,24 @@ sub updateRRD {
 }
 
 sub updateHVAC {
+# update hvas rrd file with hvac running status for stats.
+# using this rrd is sortof expensive as there is one entry per sec for the whole year, use sparingly
+    $hvacrrd->update(
+    	HVAC=>$hvac{status},
+    );
 }
 
-
-sub updateRAW {                                                     
-    my @tmpData = @TData;                                       
+sub updateRAW {
+# update raw data file for future use
+	my @tmpData = @TData;                                       
     unshift(@tmpData, time());                  
     my $output = join(',', @tmpData);
-#   print $output;                  
     my $ret = `echo $output >> $rawdb`;
 }
 
 sub GraphChumby {
-    my %rtn = $rrd->graph(
+# create smaller chumby graphs with less text and the correct size
+    my %rtn = $mainrrd->graph(
         destination => $htdocs,
         basename => "cby",
         timestamp => "both",
@@ -252,7 +251,7 @@ sub GraphWeb {
     GraphRRD('end-1month', 'now', "$htdocs/ow-monthly.png", 'Temperature - Last 30 Days');
     print "year...";
     GraphRRD('end-1year', 'now', "$htdocs/ow-yearly.png", 'Temperature - Past Year');
-    print "done generating graphs\n";
+    print "done\n";
 }
 
 sub GraphRRD {
@@ -387,20 +386,32 @@ sub GraphRRD {
   RRDp::end;
 }
 
-
-sub getRRDinfo() {
-    my $lastUpdated = $rrd->last;
-    print "ow.rrd was last updated at " .
-          scalar(localtime($lastUpdated)) . "\n";
+sub getRRDinfo {
+	print "======== Main RRD ========\n";
+    my $lastUpdated = $mainrrd->last;
+    print "$hvacdb was last updated at " . scalar(localtime($lastUpdated)) . "\n";
 
     # Get list of data source names from an RRD file
-    my @dsnames = $rrd->sources;
+    my @dsnames = $mainrrd->sources;
     print "Available data sources: " . join(", ", @dsnames) . "\n";
 
     # Return information about an RRD file
-    my $info = $rrd->info;
+    my $info = $mainrrd->info;
     require Data::Dumper;
     print Data::Dumper::Dumper($info);
+    
+  	print "\n\n======== HVAC RRD ========\n";
+    $lastUpdated = $hvacrrd->last;
+    print "$db was last updated at " . scalar(localtime($lastUpdated)) . "\n";
+
+    # Get list of data source names from an RRD file
+    @dsnames = $hvacrrd->sources;
+    print "Available data sources: " . join(", ", @dsnames) . "\n";
+
+    # Return information about an RRD file
+    $info = $hvacrrd->info;
+    require Data::Dumper;
+    print Data::Dumper::Dumper($info);   
 }
 
 sub hvacTime {
@@ -408,8 +419,11 @@ sub hvacTime {
   my $cooling = 0;
   my $heating = 0;
   
+  #no periods larger than 1 month! too much memory use
+  if($starttime eq 'end-1year') { $starttime = 'end-1month'; }
+  
   RRDp::start $rrdtool;
-  RRDp::cmd("fetch $hvacdb AVERAGE --start $starttime --end $endtime");
+  RRDp::cmd("fetch $hvacdb LAST --start $starttime --end $endtime");
   my $answer = RRDp::read;
   my @lines = split(/\n/, $$answer);
   RRDp::end;
