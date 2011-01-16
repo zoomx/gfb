@@ -178,7 +178,7 @@ sub updateRRD {
         T8=>$temps{Kitchen},
         T9=>$temps{Garage},
         T10=>$temps{Outside},
-#        HVAC=>$hvac{status}
+        HVAC=>$hvac{status}
     );
 }
 
@@ -200,11 +200,13 @@ sub updateRAW {
 
 sub GraphChumby {
 # create smaller chumby graphs with less text and the correct size
-    my %rtn = $mainrrd->graph(
+
+#graphs with hvac info on them
+    $mainrrd->graph(
         destination => $htdocs,
         basename => "cby",
         timestamp => "both",
-        periods => [qw(hour 6hour 12hour day week month annual)],
+        periods => [qw(hour day week)],
         sources => [qw(T1 T2 T3 T5 T6 T8 T9 T10)],
 	source_labels => {
 	    T1 => "Attic",
@@ -233,9 +235,52 @@ sub GraphChumby {
 #	    HVAC => "000000"
 	},
 	line_thickness => 2,
-	width => "673",
-	height => "145",
-#	full-size-mode => 1,
+	width => "745",
+	height => "250",
+	"full-size-mode" => "",
+	"CDEF:heat=HVAC,10,EQ,T3,NaN,IF" => "",
+    "CDEF:cool=HVAC,-10,EQ,T3,NaN,IF" => "",
+    "AREA:heat#FFCCCC" => "",
+    "AREA:cool#CCCCFF" => "",
+    );
+
+# graphs without hvac info
+    $mainrrd->graph(
+        destination => $htdocs,
+        basename => "cby",
+        timestamp => "both",
+        periods => [qw(month annual)],
+        sources => [qw(T1 T2 T3 T5 T6 T8 T9 T10)],
+	source_labels => {
+	    T1 => "Attic",
+	    T2 => "Basement",
+	    T3 => "Master Bed",
+#	    T4 => "",
+	    T5 => "Utility Room",
+	    T6 => "Thermostat",
+#	    T7 => "",
+	    T8 => "Kitchen",
+	    T9 => "Garage",
+	    T10 => "Outside",
+#	    HVAC => "HVAC Status"
+	},
+	source_colors => {
+	    T1 => "ff8000",
+	    T2 => "c0b000",
+	    T3 => "804099",
+#	    T4 => "000000",
+	    T5 => "008000",
+	    T6 => "000090",
+#	    T7 => "000000",
+	    T8 => "a02020",
+	    T9 => "000000",
+	    T10 => "4575d7",
+#	    HVAC => "000000"
+	},
+	line_thickness => 2,
+	width => "745",
+	height => "250",
+	"full-size-mode" => "",
     );
 }
 
