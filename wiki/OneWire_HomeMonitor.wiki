@@ -43,6 +43,7 @@ The data currently is being sent to [http://www.pachube.com pachube] as a [http:
 =Notes=
  * Use a 2k2 Ohm resistor and NOT the 4k7 that Maxim suggests. 4k7 works on their master chips, but the ATmega328/168 requires less to do a proper pull-up. See pg321 of [http://www.atmel.com/dyn/resources/prod_documents/doc8161.pdf ATmega328P Datasheet]
  * Serious nastyness going on in the arduino ethernet libraries. There is an older Ethernet2 library that includes some streamlined code and where the Server code works well but the client code has issues. On the other hand the more recent Ethernet code included with arduino-018 has updated client code but i cant seem to get the darned server code to work. Go figure. Solution? Run Ethernet2 as the base but copy over the client.h and client.cpp from the original lib. nas-ty!
+ * For HVAC monitoring, you want to read +24 on Y for AC or +24 on W for heat.
 
 =Thoughts=
 Have been having some issues with DS18's not showing up on the network, or some of them wiping out the network entirely when plugged in. I think parasite power is partly to blame on the 30ft cat5 runs, but not really sure. I _really_ wish hobby-boards made a powered version of their board, I might try some of the other vendors to see if it makes a difference. Any thoughts or help is greatly appreciated. << This is just about resolved by knocking down that pull-up resistor to 2k2 and setting resolution to 9bits. I will be trying out a smaller resistor yet to see if it lets me increase the resolution.
