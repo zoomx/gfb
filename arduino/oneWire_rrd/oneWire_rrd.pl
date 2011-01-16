@@ -48,7 +48,7 @@
 #  HVAC = hvac status
 
 
-$base_path = "/mnt/usb/oneWire_rrd";			# base app path
+our $base_path = "/mnt/usb/oneWire_rrd";		# base app path
 our $rrdtool = "/mnt/usb/rrdtool/bin/rrdtool";	# rrdtool binary
 our $db = "$base_path/ow.rrd";					# path to rrd file                          
 our $hvacdb = "$base_path/hvacStats.rrd";		# path to rrd file with hvac historical data
@@ -61,10 +61,10 @@ our $height = 200;
 our $width = 800;
 
 #use strict;
-use RRDp;
-use RRD::Simple;
-use LWP::Simple;
-use POSIX qw(strftime); # Used for strftime in graph() method
+use RRDp ();
+use RRD::Simple ();
+use LWP::Simple ();
+use POSIX (); # Used for strftime in graph() method
 
 
 our @TData; #where we store data (for now)
@@ -138,7 +138,7 @@ sub usage {
 sub getData {
 # grab data from website and push into hash
 # web data sample: startvar&Utility=60.58&Kitchen=56.08&Attic=31.10&MasterBed=62.83&Basement=52.31&Garage=45.95&BasementH=41.60&HVACstatus=standby
-    my $content = get $remoteWeb;
+    my $content = LWP::Simple::get $remoteWeb;
     die "Couldn't get $remoteWeb" unless defined $content;
 
     if( $content =~ m{startvar&([\S]+)} ) {
@@ -288,10 +288,10 @@ sub GraphRRD {
   my $lastupdate = RRDp::read;
 
   my $timefmt = '%a %d/%b/%Y %T %Z';
-  my $rtime = sprintf('RRD last updated: %s\r', strftime($timefmt,localtime($$lastupdate)));
+  my $rtime = sprintf('RRD last updated: %s\r', POSIX::strftime($timefmt,localtime($$lastupdate)));
   $rtime =~ s/:/\\:/g; 
 
-  my $gtime = sprintf('Graph last updated: %s\r', strftime($timefmt,localtime(time)));
+  my $gtime = sprintf('Graph last updated: %s\r', POSIX::strftime($timefmt,localtime(time)));
   $gtime =~ s/:/\\:/g;
 
   RRDp::cmd(
@@ -444,7 +444,8 @@ sub hvacTime {
 }
 
 sub getHVACstats {
-	my ($lastDayH, $lastDayC, $lastWeekH, $lastWeekC, $lastMoAvgH, $lastMoAvgC, $prevMoAvgH, $prevMoAvgC, $lastYrAvgH, $lastYrAvgC);
+	my ($lastDayH, $lastDayC, $lastWeekH, $lastWeekC, $lastMoAvgH, $lastMoAvgC, $prevMoAvgH, $prevMoAvgC);
+#	my ($lastYrAvgH, $lastYrAvgC);
 	
 	##data is straight from the rrd. This is fine for day, week, but gets expensive for month & year.
 	$lastDayH = hvacTime('end-1day', 'now', 'heating');
