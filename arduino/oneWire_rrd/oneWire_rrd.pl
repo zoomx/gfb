@@ -508,7 +508,7 @@ sub getHVACstats {
 	#$lastYrAvgH = hvacTime('end-1year', 'now', 'heating');
 	#$lastYrAvgC = hvacTime('end-1year', 'now', 'cooling');
 	
-	$hvacString = "lastDayH=$lastDayH,lastDayC=$lastDayC,lastWeekH=$lastWeekH,lastWeekC=$lastWeekC,lastMoAvgH=$lastMoAvgH,lastMoAvgC=$lastMoAvgC,prevMoAvgH=$prevMoAvgH,prevMoAvgC=$prevMoAvgC"; 
+	$hvacString = "&HVAClastDayH=$lastDayH&HVAClastDayC=$lastDayC&HVAClastWeekH=$lastWeekH&HVAClastWeekC=$lastWeekC&HVAClastMoAvgH=$lastMoAvgH&HVAClastMoAvgC=$lastMoAvgC&HVACprevMoAvgH=$prevMoAvgH&HVACprevMoAvgC=$prevMoAvgC"; 
 	
 	my $ret = `echo $hvacString > $hvacStatsFile`;
 	print "$hvacString\n"; 
