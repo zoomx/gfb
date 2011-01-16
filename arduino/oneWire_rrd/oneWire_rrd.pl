@@ -53,7 +53,7 @@ our $rrdtool = "/mnt/usb/rrdtool/bin/rrdtool";	# rrdtool binary
 our $db = "$base_path/ow.rrd";					# path to rrd file                          
 our $hvacdb = "$base_path/hvacStats.rrd";		# path to rrd file with hvac historical data
 our $rawdb = "$base_path/ow.raw";				# path to raw file
-our $hvacStatsFile = "$base_path/www/hvacStats.txt"; # path to hvac stats file for web read
+our $hvacStatsFile = "/mnt/usb/lighty/cgi-bin/hvacStats.txt";	# path to hvac stats file for web read
 our $htdocs = "$base_path/www";					# directory where the graphs will end up
 our $remoteWeb = 'http://127.0.0.1/cgi-bin/getTemps.pl';  # URL to get the data from
 
@@ -510,6 +510,6 @@ sub getHVACstats {
 	
 	$hvacString = "&HVAClastDayH=$lastDayH&HVAClastDayC=$lastDayC&HVAClastWeekH=$lastWeekH&HVAClastWeekC=$lastWeekC&HVAClastMoAvgH=$lastMoAvgH&HVAClastMoAvgC=$lastMoAvgC&HVACprevMoAvgH=$prevMoAvgH&HVACprevMoAvgC=$prevMoAvgC"; 
 	
-	my $ret = `echo $hvacString > $hvacStatsFile`;
+	my $ret = `echo '$hvacString' > $hvacStatsFile`;
 	print "$hvacString\n"; 
 }
