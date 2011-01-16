@@ -62,6 +62,7 @@
 $base_path = "/mnt/usb/oneWire_rrd";      # main app path
 our $rrdtool = "/mnt/usb/rrdtool/bin/rrdtool";    # rrdtool binary
 our $db = "$base_path/ow.rrd";        # path to rrd file                          
+our $hvacdb = "$base_path/ow.rrd";    # path to rrd file with hvac historical data
 our $rawdb = "$base_path/ow.raw";     # path to raw file
 our $htdocs = "$base_path/www";       # directory where the graphs will end up
 our $remoteWeb = 'http://127.0.0.1/cgi-bin/getTemps.pl';  # URL to get the data from
@@ -104,6 +105,7 @@ if ( defined $ARGV[0] ) {
       getData();
       print "got data...";
       updateRRD();
+      updateHVAC();
       updateRAW();
       print "updated!\n";
   }
@@ -118,7 +120,7 @@ if ( defined $ARGV[0] ) {
   }
 
   elsif ($ARGV[0] eq "hvac") {
-      print "HVAC Time over past 24hrs: " . hvacTime('end-1day', 'now') . "\n";
+      print "HVAC Time over past 24hrs: " . hvacTime('end-1day', 'now', 'both') . "\n";
   }
 
   else {
@@ -181,6 +183,10 @@ sub updateRRD {
 #        HVAC=>$hvac{status}
     );
 }
+
+sub updateHVAC {
+}
+
 
 sub updateRAW {                                                     
     my @tmpData = @TData;                                       
@@ -251,9 +257,9 @@ sub GraphWeb {
 
 sub GraphRRD {
   my ( $starttime, $endtime, $ofname, $title ) = @_;
-
-  my $hvacPeriodTime = hvacTime($starttime, $endtime);
   my ( $htime, $hvacAvgTime );
+
+  my $hvacPeriodTime = hvacTime($starttime, $endtime, "both");
 
   if ($starttime eq "end-1week") {
     $hvacAvgTime = $hvacPeriodTime / 7;
@@ -398,20 +404,23 @@ sub getRRDinfo() {
 }
 
 sub hvacTime {
-  my ( $starttime, $endtime ) = @_;
-  my $hvacOn = 0;
-
+  my ( $starttime, $endtime, $hvactype ) = @_;
+  my $cooling = 0;
+  my $heating = 0;
+  
   RRDp::start $rrdtool;
-  RRDp::cmd("fetch $db AVERAGE --start $starttime --end $endtime");
+  RRDp::cmd("fetch $hvacdb AVERAGE --start $starttime --end $endtime");
   my $answer = RRDp::read;
   my @lines = split(/\n/, $$answer);
   RRDp::end;
 
   foreach my $line (@lines) {
-    if ( $line =~ /1\.0000000000e\+01$/ ) {
-      $hvacOn++;
-    }
+    @subline = split(/ /,  $line);
+    if($subline[11] =~ /\-1\.0000000000e\+01$/) { $cooling++; }
+    elsif($subline[11] =~ /1\.0000000000e\+01$/) { $heating++; }
   }
 
-  return $hvacOn;
+  if($hvactype eq 'cooling') { return $cooling; }
+  elsif($hvactype eq 'heating') { return $heating; }
+  else { return ($heating + $cooling) }
 }
