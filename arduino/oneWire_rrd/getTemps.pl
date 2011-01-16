@@ -18,6 +18,8 @@ if ($ENV{'REQUEST_METHOD'} eq "GET") {
 #$owwrite = '/mnt/usb/owfs/bin/owwrite -s 4444';
 #$owget = '/mnt/usb/owfs/bin/owget -F -s 4444';
 $owget = '/mnt/usb/owfs/bin/owread -F -s 4444';
+$hvacStatsFile = "hvacStats.txt"; # path to hvac stats file for web read
+
 
 
 ##trigger convert_t << for when network grows enough...
@@ -71,6 +73,7 @@ $data{Basement} = `$owget $uncached/sw1/main/BasementH/temperature`;
 $data{Basement} =~ s/^\s+//;
 if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi t time = $t_time\n"; }
 
+my $hvacInfo = `cat $hvacStatsFile`;
 
 ##OUTPUT##
 #print "Content-type: text/html\r\n\r\n";
@@ -84,5 +87,6 @@ for my $key (keys %data) {
 for my $key (keys %hvac) {
 	print "&HVAC$key=$hvac{$key}";
 };
+print $hvacInfo;
 print "\n";
 
