@@ -137,6 +137,7 @@ sub usage {
 
 sub getData {
 # grab data from website and push into hash
+# web data sample: startvar&Utility=60.58&Kitchen=56.08&Attic=31.10&MasterBed=62.83&Basement=52.31&Garage=45.95&BasementH=41.60&HVACstatus=standby
     my $content = get $remoteWeb;
     die "Couldn't get $remoteWeb" unless defined $content;
 
@@ -159,6 +160,7 @@ sub getData {
             $temps{$key} = sprintf("%.2f", $temps{$key});          
         } 
     }
+    else { die "BAD DATA PULL FROM WEB!"; }
 }
 
 sub updateRRD {
