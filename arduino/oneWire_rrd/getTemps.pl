@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-$debug = 0;
+$debug = 1;
 $uncached = "";
 $buffer = "";
 
@@ -50,18 +50,18 @@ foreach (@sw3) {
 if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "temp time = $t_time\n"; }
 
 ##grab hvac
+##these numbers are rather messed up because of a ~30v ground difference between the furnace and the 1wire network.
+##the logic here needs to be reworked also, its currently not valid for when the furnace is not being monitored, screweing up the long-term stats.
+##^^investigate!
 if ($debug) { $st_time = time(); }
-$hvacVal = `$owget $uncached/sw3/main/HVAC/volt.A`;
-if ($hvacVal > 0.3) {
-	$hvac{status} = "heating";
-}
-elsif ($hvacVal < -0.3) {
-	$hvac{status} = "cooling";
-}
-else {
-	$hvac{status} = "standby";
-}
+$hvac{status} = "standby";
+$hvacValA = `$owget $uncached/sw3/main/HVAC/volt.A`;
+if ($hvacValA < 0.09) { $hvac{status} = "heating"; }
+$hvacValB = `$owget $uncached/sw3/main/HVAC/volt.B`;
+if ($hvacValB < 0.09) { $hvac{status} = "cooling"; }
+#else { $hvac{status} = "standby"; }
 if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "hvac time = $t_time\n"; }
+if ($debug) { print "hvA=$hvacValA hvB=$hvacValB"}
 	
 ##grab humidity & temp from DS2438 ~1s faster than DS18S20 on board
 if ($debug) { $st_time = time(); }
