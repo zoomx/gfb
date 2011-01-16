@@ -53,6 +53,7 @@ our $rrdtool = "/mnt/usb/rrdtool/bin/rrdtool";	# rrdtool binary
 our $db = "$base_path/ow.rrd";					# path to rrd file                          
 our $hvacdb = "$base_path/hvacStats.rrd";		# path to rrd file with hvac historical data
 our $rawdb = "$base_path/ow.raw";				# path to raw file
+our $hvacStatsFile = "$base_path/www/hvacStats.txt"; # path to hvac stats file for web read
 our $htdocs = "$base_path/www";					# directory where the graphs will end up
 our $remoteWeb = 'http://127.0.0.1/cgi-bin/getTemps.pl';  # URL to get the data from
 
@@ -111,7 +112,8 @@ if ( defined $ARGV[0] ) {
       getRRDinfo();
   }
   elsif ($ARGV[0] eq "hvac") {
-      print "HVAC Time over past 24hrs: " . hvacTime('end-1day', 'now', 'both') . "\n";
+  	  getHVACstats();
+      #print "HVAC Time over past 24hrs: " . hvacTime('end-1day', 'now', 'both') . "\n";
   }
   else {
       usage(); 
@@ -437,4 +439,29 @@ sub hvacTime {
   if($hvactype eq 'cooling') { return $cooling; }
   elsif($hvactype eq 'heating') { return $heating; }
   else { return ($heating + $cooling) }
+}
+
+sub getHVACstats {
+	my ($lastDayH, $lastDayC, $lastWeekH, $lastWeekC, $lastMoAvgH, $lastMoAvgC, $prevMoAvgH, $prevMoAvgC, $lastYrAvgH, $lastYrAvgC);
+	
+	##data is straight from the rrd. This is fine for day, week, but gets expensive for month & year.
+	$lastDayH = hvacTime('end-1day', 'now', 'heating');
+	$lastDayC = hvacTime('end-1day', 'now', 'cooling');
+	$lastWeekH = hvacTime('end-1week', 'now', 'heating');
+	$lastWeekC = hvacTime('end-1week', 'now', 'cooling');
+	
+	##past 30 days & previous 30 days
+	$lastMoAvgH = (hvacTime('end-1month', 'now', 'heating') / 30);
+	$lastMoAvgC = (hvacTime('end-1month', 'now', 'cooling') / 30);
+	$prevMoAvgH = (hvacTime('end-2month', 'now-1month', 'heating') / 30);
+	$prevMoAvgC = (hvacTime('end-2month', 'now-1month', 'cooling') / 30);
+	
+	##avoid doing year at all costs, uses more memory that available on chumby
+	#$lastYrAvgH = hvacTime('end-1year', 'now', 'heating');
+	#$lastYrAvgC = hvacTime('end-1year', 'now', 'cooling');
+	
+	$hvacString = "lastDayH=$lastDayH,lastDayC=$lastDayC,lastWeekH=$lastWeekH,lastWeekC=$lastWeekC,lastMoAvgH=$lastMoAvgH,lastMoAvgC=$lastMoAvgC,prevMoAvgH=$prevMoAvgH,prevMoAvgC=$prevMoAvgC"; 
+	
+	my $ret = `echo $hvacString > $hvacStatsFile`;
+	print "$hvacString\n"; 
 }
