@@ -31,6 +31,7 @@ $hvacStatsFile = "hvacStats.txt"; # path to hvac stats file for web read
 @sw1 = ('Attic', 'MasterBed');
 @sw2 = ('Kitchen', 'Garage');
 @sw3 = ('Utility');
+#@sw3a = ('Hallway');
 
 
 ##grab regular temps
@@ -71,6 +72,16 @@ if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi time 
 if ($debug) { $st_time = time(); }
 $data{Basement} = `$owget $uncached/sw1/main/BasementH/temperature`;
 $data{Basement} =~ s/^\s+//;
+if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi t time = $t_time\n"; }
+
+##grab humidity & temp from DS2438 in Hallway
+#if ($debug) { $st_time = time(); }
+#$data{ThermostatH} = `$owget $uncached/sw3/aux/Hallway/HIH4000/humidity`;
+#$data{ThermostatH} =~ s/^\s+//;
+#if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi time = $t_time\n"; }
+if ($debug) { $st_time = time(); }
+$data{Thermostat} = `$owget $uncached/sw3/aux/Hallway/temperature`;
+$data{Thermostat} =~ s/^\s+//;
 if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi t time = $t_time\n"; }
 
 my $hvacInfo = `cat $hvacStatsFile`;
