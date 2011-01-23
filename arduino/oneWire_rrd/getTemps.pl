@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-$debug = 1;
+$debug = 0;
 $uncached = "";
 $buffer = "";
 
@@ -75,16 +75,24 @@ $data{Basement} =~ s/^\s+//;
 if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi t time = $t_time\n"; }
 
 ##grab humidity & temp from DS2438 in Hallway
-#if ($debug) { $st_time = time(); }
-#$data{ThermostatH} = `$owget $uncached/sw3/aux/Hallway/HIH4000/humidity`;
-#$data{ThermostatH} =~ s/^\s+//;
-#if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi time = $t_time\n"; }
+if ($debug) { $st_time = time(); }
+$data{ThermostatH} = `$owget $uncached/sw3/aux/Hallway/HIH4000/humidity`;
+$data{ThermostatH} =~ s/^\s+//;
+if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi time = $t_time\n"; }
 if ($debug) { $st_time = time(); }
 $data{Thermostat} = `$owget $uncached/sw3/aux/Hallway/temperature`;
 $data{Thermostat} =~ s/^\s+//;
 if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "humi t time = $t_time\n"; }
 
 my $hvacInfo = `cat $hvacStatsFile`;
+
+
+##Sanitize##
+for my $key (keys %data) {
+	if ($data{$key} == 0) {
+		$data{$key} = 'NaN';
+	}
+}
 
 ##OUTPUT##
 #print "Content-type: text/html\r\n\r\n";
