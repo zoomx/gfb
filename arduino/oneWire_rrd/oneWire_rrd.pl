@@ -70,6 +70,9 @@ use POSIX (); # Used for strftime in graph() method
 our @TData; #where we store data (for now)
 our %temps; #key=name_of_temp, value=temp_or_hum
 our %hvac; #store hvac info like status, times, etc
+our @HVACdata;
+our $HVAClastEntry;
+our $HVACfirstEntry;
 
 # open hvac rrd for function use
 our $hvacrrd = RRD::Simple->new(
@@ -92,6 +95,7 @@ if ( defined $ARGV[0] ) {
       GraphChumby();
   }
   elsif ( $ARGV[0] eq "webgraph" ) {
+  	  grabHVACdata();
       GraphWeb();
   }
   elsif ( $ARGV[0] eq "update" ) {
@@ -112,8 +116,13 @@ if ( defined $ARGV[0] ) {
       getRRDinfo();
   }
   elsif ($ARGV[0] eq "hvac") {
-  	  getHVACstats();
-      #print "HVAC Time over past 24hrs: " . hvacTime('end-1day', 'now', 'both') . "\n";
+  	  grabHVACdata();
+ 	  getHVACstats();
+      #print "HVAC Time over past 24hrs: " . parseHVACdata('end-1day', 'now', 'both') . "\n";
+  }
+  elsif ($ARGV[0] eq "test") {
+  	  grabHVACdata();
+  	  parseHVACdata('end-1month', 'now', 'heating');
   }
   else {
       usage(); 
@@ -133,7 +142,6 @@ sub usage {
     print "   info     - Dumps rrd info to console\n";
     print "   hvac     - HVAC runtime stats\n";
 }
-
 
 sub getData {
 # grab data from website and push into hash
@@ -307,7 +315,7 @@ sub GraphRRD {
   my ( $starttime, $endtime, $ofname, $title ) = @_;
   my ( $htime, $hvacAvgTime );
 
-  my $hvacPeriodTime = hvacTime($starttime, $endtime, "both");
+  my $hvacPeriodTime = parseHVACdata($starttime, $endtime, "both");
 
   if ($starttime eq "end-1week") {
     $hvacAvgTime = $hvacPeriodTime / 7;
@@ -465,6 +473,7 @@ sub getRRDinfo {
 
 sub hvacTime {
   my ( $starttime, $endtime, $hvactype ) = @_;
+  my @subline;
   my $cooling = 0;
   my $heating = 0;
   
@@ -479,8 +488,9 @@ sub hvacTime {
 
   foreach my $line (@lines) {
     @subline = split(/ /,  $line);
-    if($subline[11] =~ /\-1\.0000000000e\+01$/) { $cooling++; }
-    elsif($subline[11] =~ /1\.0000000000e\+01$/) { $heating++; }
+#    print "$subline[1]\n";
+    if($subline[1] =~ /\-1\.0000000000e\+01$/) { $cooling++; }
+    elsif($subline[1] =~ /1\.0000000000e\+01$/) { $heating++; }
   }
 
   if($hvactype eq 'cooling') { return $cooling; }
@@ -488,25 +498,78 @@ sub hvacTime {
   else { return ($heating + $cooling) }
 }
 
+sub grabHVACdata {
+	my $starttime = 'end-2month';
+	my $endtime = 'now';
+	
+	RRDp::start $rrdtool;
+	RRDp::cmd("fetch $hvacdb LAST --start $starttime --end $endtime");
+	my $answer = RRDp::read;
+	@HVACdata = split(/\n/, $$answer);
+	RRDp::end;
+	
+	$HVAClastEntry = $hvacrrd->last;
+	RRDp::start $rrdtool;
+	RRDp::cmd("first $hvacdb");
+	$answer = RRDp::read;
+	$HVACfirstEntry = $$answer;
+	RRDp::end;	
+	
+#	print "last = $HVAClastEntry\nfirst = $HVACfirstEntry\n"
+}
+
+sub parseHVACdata {
+	my ( $starttime, $endtime, $hvactype ) = @_;
+	my $cooling = 0;
+	my $heating = 0;
+	my @subline;
+	
+	if ($endtime eq 'now-1month') { $endtime = $HVAClastEntry - 2592000; }
+	else { $endtime = $HVAClastEntry; } # default to now
+	
+	if ($starttime eq 'end-1week') { $starttime = $endtime - 604800; }
+	elsif ($starttime eq 'end-1month') { $starttime = $endtime - 2592000; }
+	elsif ($starttime eq 'end-2month') { $starttime = $endtime - 5184000; }
+	else { $starttime = $endtime - 86400; } #default to end-1day
+	
+#	print "start = $starttime\nend = $endtime\n";
+	
+	foreach my $line (@HVACdata) {
+		@subline = split(/:/, $line);
+		#print "$subline[0]\n";
+		if (($subline[0] < $endtime) && ($subline[0] > $starttime)) {
+#			print "$subline[0] $subline[1]\n";
+			if($subline[1] =~ /\-1\.0000000000e\+01$/) { $cooling++; }
+			elsif($subline[1] =~ /1\.0000000000e\+01$/) { $heating++; }
+		}
+	}
+	
+#	print "heat = $heating\ncool = $cooling\n";
+	
+	if ($hvactype eq 'cooling') { return $cooling; }
+	elsif($hvactype eq 'heating') { return $heating; }
+	else { return ($heating + $cooling) }
+}
+
 sub getHVACstats {
 	my ($lastDayH, $lastDayC, $lastWeekH, $lastWeekC, $lastMoAvgH, $lastMoAvgC, $prevMoAvgH, $prevMoAvgC);
 #	my ($lastYrAvgH, $lastYrAvgC);
 	
 	##data is straight from the rrd. This is fine for day, week, but gets expensive for month & year.
-	$lastDayH = hvacTime('end-1day', 'now', 'heating');
-	$lastDayC = hvacTime('end-1day', 'now', 'cooling');
-	$lastWeekH = hvacTime('end-1week', 'now', 'heating');
-	$lastWeekC = hvacTime('end-1week', 'now', 'cooling');
-	
+	$lastDayH = parseHVACdata('end-1day', 'now', 'heating');
+	$lastDayC = parseHVACdata('end-1day', 'now', 'cooling');
+	$lastWeekH = parseHVACdata('end-1week', 'now', 'heating');
+	$lastWeekC = parseHVACdata('end-1week', 'now', 'cooling');
+
 	##past 30 days & previous 30 days
-	$lastMoAvgH = (hvacTime('end-1month', 'now', 'heating') / 30);
-	$lastMoAvgC = (hvacTime('end-1month', 'now', 'cooling') / 30);
-	$prevMoAvgH = (hvacTime('end-2month', 'now-1month', 'heating') / 30);
-	$prevMoAvgC = (hvacTime('end-2month', 'now-1month', 'cooling') / 30);
+	$lastMoAvgH = sprintf("%d",(parseHVACdata('end-1month', 'now', 'heating') / 30));
+	$lastMoAvgC = sprintf("%d",(parseHVACdata('end-1month', 'now', 'cooling') / 30));
+	$prevMoAvgH = sprintf("%d",(parseHVACdata('end-2month', 'now-1month', 'heating') / 30));
+	$prevMoAvgC = sprintf("%d",(parseHVACdata('end-2month', 'now-1month', 'cooling') / 30));
 	
 	##avoid doing year at all costs, uses more memory that available on chumby
-	#$lastYrAvgH = hvacTime('end-1year', 'now', 'heating');
-	#$lastYrAvgC = hvacTime('end-1year', 'now', 'cooling');
+	#$lastYrAvgH = parseHVACdata('end-1year', 'now', 'heating');
+	#$lastYrAvgC = parseHVACdata('end-1year', 'now', 'cooling');
 	
 	$hvacString = "&HVAClastDayH=$lastDayH&HVAClastDayC=$lastDayC&HVAClastWeekH=$lastWeekH&HVAClastWeekC=$lastWeekC&HVAClastMoAvgH=$lastMoAvgH&HVAClastMoAvgC=$lastMoAvgC&HVACprevMoAvgH=$prevMoAvgH&HVACprevMoAvgC=$prevMoAvgC"; 
 	
