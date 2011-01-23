@@ -57,9 +57,9 @@ if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "temp time 
 if ($debug) { $st_time = time(); }
 $hvac{status} = "standby";
 $hvacValA = `$owget $uncached/sw3/main/HVAC/volt.A`;
-if ($hvacValA < 0.09) { $hvac{status} = "heating"; }
+if ($hvacValA > 2) { $hvac{status} = "heating"; }
 $hvacValB = `$owget $uncached/sw3/main/HVAC/volt.B`;
-if ($hvacValB < 0.09) { $hvac{status} = "cooling"; }
+if ($hvacValB > 2) { $hvac{status} = "cooling"; }
 #else { $hvac{status} = "standby"; }
 if ($debug) { $en_time = time(); $t_time = $en_time-$st_time;  print "hvac time = $t_time\n"; }
 if ($debug) { print "hvA=$hvacValA hvB=$hvacValB"}
