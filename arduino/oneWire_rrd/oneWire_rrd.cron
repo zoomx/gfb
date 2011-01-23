@@ -1,5 +1,5 @@
 ## put me in /etc/cron.d/ to start updates and generating graphs
 * * * * *  /mnt/usb/oneWire_rrd/oneWire_rrd.pl update >> /mnt/usb/oneWire_rrd/cron.log
 */5 * * * * /mnt/usb/oneWire_rrd/oneWire_rrd.pl chumby >> /mnt/usb/oneWire_rrd/cron.lo
-2 * * * * /mnt/usb/oneWire_rrd/oneWire_rrd.pl hvac >> /mnt/usb/oneWire_rrd/cron.log 2>
+2,17,32,47 * * * * /mnt/usb/oneWire_rrd/oneWire_rrd.pl hvac >> /mnt/usb/oneWire_rrd/cron.log 2>
 ~
