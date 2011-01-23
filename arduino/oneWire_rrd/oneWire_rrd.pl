@@ -49,7 +49,9 @@
 
 
 our $base_path = "/mnt/usb/oneWire_rrd";		# base app path
+#our $base_path = ".";		# base app path
 our $rrdtool = "/mnt/usb/rrdtool/bin/rrdtool";	# rrdtool binary
+#our $rrdtool = "rrdtool";	# rrdtool binary
 our $db = "$base_path/ow.rrd";					# path to rrd file                          
 our $hvacdb = "$base_path/hvacStats.rrd";		# path to rrd file with hvac historical data
 our $rawdb = "$base_path/ow.raw";				# path to raw file
@@ -66,6 +68,7 @@ use RRD::Simple ();
 use LWP::Simple ();
 use POSIX (); # Used for strftime in graph() method
 
+#use Devel::Size qw(size total_size);
 
 our @TData; #where we store data (for now)
 our %temps; #key=name_of_temp, value=temp_or_hum
@@ -502,11 +505,26 @@ sub grabHVACdata {
 	my $starttime = 'end-2month';
 	my $endtime = 'now';
 	
+	#grab data from rrd but only populate on times as we dont care about the rest.
+	#this saves significant amounts of memory 5mb > 250k !!
+	#and significantly speeds up processing the stats to half the time
 	RRDp::start $rrdtool;
 	RRDp::cmd("fetch $hvacdb LAST --start $starttime --end $endtime");
 	my $answer = RRDp::read;
-	@HVACdata = split(/\n/, $$answer);
+	foreach my $line (split(/\n/, $$answer)) {
+		my @subline = split(/\s+/, $line);
+		if ($subline[1] =~ /1\.0000000000e\+01$/) {
+			push(@HVACdata, $line);
+		}
+	}
+#	@HVACdata = split(/\n/, $$answer);
 	RRDp::end;
+	
+#	print "answer size = " . size($answer) . "\n";
+#	print "answer total size = " . total_size($answer) . "\n";
+	
+#	print "hvacdata size = " . size(\@HVACdata) . "\n";
+#	print "hvacdata total size = " . total_size(\@HVACdata) . "\n";
 	
 	$HVAClastEntry = $hvacrrd->last;
 	RRDp::start $rrdtool;
@@ -514,6 +532,15 @@ sub grabHVACdata {
 	$answer = RRDp::read;
 	$HVACfirstEntry = $$answer;
 	RRDp::end;	
+	
+#	print "answer size = " . size($answer) . "\n";
+#	print "answer total size = " . total_size($answer) . "\n";
+		
+	undef $answer;
+#	print "answer size = " . size($answer) . "\n";
+#	print "answer total size = " . total_size($answer) . "\n";
+		
+	
 	
 #	print "last = $HVAClastEntry\nfirst = $HVACfirstEntry\n"
 }
