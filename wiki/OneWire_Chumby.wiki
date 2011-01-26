@@ -1,43 +1,51 @@
 #summary Using the Chumby Silvermoon platform as a OneWire system
+#labels chumby,Featured,onewire
 
-= Introduction =
+== Introduction ==
+The Chumby is a great little linux-based platform on an arm core with all the standard bits you would need in the DIY space. WiFi, USB, 1-2GB Flash, 3"-8" LCD screen, small package, low power needs.
 
-Best Buy Insignia Infocast 8" Chumby @ $67, $60 open box
-Link45 Serial OneWire Adapter
-USB->Serial Adapter
+== HW Details ==
+  * Best Buy Insignia Infocast 8" Chumby @ $67, $60 open box
+    * [http://wiki.chumby.com/mediawiki/index.php/Main_Page Chumby hardware options]
+  * [http://www.ibuttonlink.com/link45.aspx Link45 Serial OneWire Adapter]
+  * USB->Serial Adapter
 
-= HW Details =
-http://wiki.chumby.com/mediawiki/index.php/Main_Page
-
-= Software =
+== Building the Toolset==
   * use scratchbox to cross-compile for arm platform
-
   * owfs-2.5p2
-odd libtool issues resolved by resetting libtool with 'libtoolize --force --copy; aclocal; autoconf; automake'
-
+    * odd libtool issues resolved by resetting libtool with `libtoolize --force --copy; aclocal; autoconf; automake`
   * rrdtool-1.4.5
-lots of dependencies, follow http://oss.oetiker.ch/rrdtool/doc/rrdbuild.en.html
-set:
-export PKG_CONFIG_PATH=/home/gfb/libs/lib/pkgconfig
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/gfb/libs/lib
-export PATH=$PATH:/home/gfb/libs/bin
-LDFLAGS=-Wl,--rpath -Wl,/home/gfb/libs/ -L/home/gfb/libs/
-CPPFLAGS=-I/home/gfb/libs/include
+    * lots of dependencies, make sure to follow the [http://oss.oetiker.ch/rrdtool/doc/rrdbuild.en.html docs!]
+
+== Notes ==
+`PKG_CONFIG_PATH=/home/gfb/libs/lib/pkgconfig`<br>
+`LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/gfb/libs/lib`<br>
+`PATH=$PATH:/home/gfb/libs/bin`<br>
+`LDFLAGS=-Wl,--rpath -Wl,/home/gfb/libs/ -L/home/gfb/libs/`<br>
+`CPPFLAGS=-I/home/gfb/libs/include`<br>
 put all libs in one spot to move to chumby
 
-freetype needs builds/unix/unix-cc.mk fixed with --tag:
-CC    := $(LIBTOOL) --tag=CC --mode=compile $(CCraw)
-LINK_LIBRARY = $(LIBTOOL) --tag=CC --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
+freetype needs builds/unix/unix-cc.mk fixed with --tag:<br>
+`CC    := $(LIBTOOL) --tag=CC --mode=compile $(CCraw)`<br>
+`LINK_LIBRARY = $(LIBTOOL) --tag=CC --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \`
 
 
 
-= Links =
-http://wiki.chumby.com/mediawiki/index.php/Main_Page
-http://www.bunniestudios.com/blog/?cat=2&paged=6
-http://owfs.org
-http://www.scratchbox.org/documentation/user/scratchbox-1.0/html/installdoc.html
-http://developer.mysmartgrid.de/doku.php?id=chumbycurrentcosthowto
+== Links ==
+http://wiki.chumby.com/mediawiki/index.php/Main_Page<br>
+http://www.bunniestudios.com/blog/?cat=2&paged=6<br>
+http://www.owfs.org<br>
+http://www.scratchbox.org/documentation/user/scratchbox-1.0/html/installdoc.html<br>
+http://developer.mysmartgrid.de/doku.php?id=chumbycurrentcosthowto<br>
 
 
-= Flash = 
+== Flash ==
 http://kb2.adobe.com/cps/142/tn_14213.html
+
+== What it looks like... ==
+I tore the device apart and mounted the main board to the back of the LCD with standoffs. No need for speakers or headphone jack so didn't put those in place. The white wall box is a [http://www.amazon.com/gp/product/B0012DPO5A/ref=oss_product Leviton Recessed Entertainment Box.] Hanging by the screen you see a Hobby Boards board with a DS2348 reading a Honneywell humidity sensor.
+
+http://lh3.ggpht.com/_IhezzMAaFLg/TT2i-Gp1ZgI/AAAAAAAAHYM/JiowMuaA-Ig/s720/1000000269.JPG
+http://lh4.ggpht.com/_IhezzMAaFLg/TT2ij8vXXQI/AAAAAAAAHYM/v3u7cZlNXzM/s512/1000000262.JPG
+http://lh3.ggpht.com/_IhezzMAaFLg/TT2iMecI5iI/AAAAAAAAHYM/9qkQ72mlQDE/s720/1000000258.JPG
+http://lh6.ggpht.com/_IhezzMAaFLg/TT9yjLhuSPI/AAAAAAAAHZk/HmECKJ5R3XI/s720/1000000281.JPG
