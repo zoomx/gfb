@@ -30,6 +30,7 @@ $hvacStatsFile = "hvacStats.txt"; # path to hvac stats file for web read
 #@sw1 = ('Attic', 'Basement', 'MasterBed'); #dont read Basement temp, get it from BasementH
 @sw1 = ('Attic', 'MasterBed');
 @sw2 = ('Kitchen', 'Garage');
+@sw2a = ('FrontBath', 'FrontBed', 'MasterBath', 'MiddleBed');
 @sw3 = ('Utility');
 #@sw3a = ('Hallway');
 
@@ -43,6 +44,10 @@ foreach (@sw1) {
 foreach (@sw2) {
 	$data{$_} = `$owget $uncached/sw2/main/$_/temperature11`;
 	$data{$_} =~ s/^\s+//;
+}
+foreach (@sw2a) {                                                              
+    $data{$_} = `$owget $uncached/sw2/aux/$_/temperature11`;               
+    $data{$_} =~ s/^\s+//;                                                 
 }
 foreach (@sw3) {                                                                
 	$data{$_} = `$owget $uncached/sw3/main/$_/temperature11`;
