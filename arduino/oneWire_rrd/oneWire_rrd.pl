@@ -89,8 +89,8 @@ our $hvacrrd = RRD::Simple->new(
 # open main rrd for function use
 our $mainrrd = RRD::Simple->new(
     file => $db,
-#    on_missing_ds => "die" 
-    on_missing_ds => "add" 
+    on_missing_ds => "die" 
+#    on_missing_ds => "add" 
     
 );
 
@@ -188,7 +188,6 @@ sub updateRRD {
         T4=>$temps{FrontBath},
         T5=>$temps{Utility},
         T6=>$temps{Thermostat},
-#        T6=>'NaN',
 #        T7=>$TData[6],
         T7=>'NaN',
         T8=>$temps{Kitchen},
@@ -225,7 +224,7 @@ sub GraphChumby {
         destination => $htdocs,
         basename => "cby",
         timestamp => "both",
-        periods => [qw(hour day week)],
+        periods => [qw(hour 6hour 12hour day week)],
         sources => [qw(T1 T2 T3 T4 T5 T6 T8 T9 T10 T11 T12 T13)],
 	source_labels => {
 	    T1 => "Attic",
