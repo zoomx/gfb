@@ -38,7 +38,7 @@
 #  T1 =  Attic
 #  T2 =  Basement
 #  T3 =  Master Bed
-#  T4 =  //dead
+#  T4 =  Front Bath
 #  T5 =  Utility room
 #  T6 =  thermostat
 #  T7 =  arduino local // dead
@@ -46,6 +46,9 @@
 #  T9 =  garage
 #  T10 = outside
 #  HVAC = hvac status
+#  T11 = Front Bed
+#  T12 = Master Bath
+#  T13 = Middle Bed
 
 
 our $base_path = "/mnt/usb/oneWire_rrd";		# base app path
@@ -80,13 +83,15 @@ our $HVACfirstEntry;
 # open hvac rrd for function use
 our $hvacrrd = RRD::Simple->new(
     file => $hvacdb,
-    on_missing_ds => "die" 
+    on_missing_ds => "die"
 );
 
 # open main rrd for function use
 our $mainrrd = RRD::Simple->new(
     file => $db,
-    on_missing_ds => "die" 
+#    on_missing_ds => "die" 
+    on_missing_ds => "add" 
+    
 );
 
 if ( defined $ARGV[0] ) {
@@ -180,7 +185,7 @@ sub updateRRD {
         T1=>$temps{Attic},
         T2=>$temps{Basement},
         T3=>$temps{MasterBed},
-        T4=>'NaN',
+        T4=>$temps{FrontBath},
         T5=>$temps{Utility},
         T6=>$temps{Thermostat},
 #        T6=>'NaN',
@@ -189,7 +194,10 @@ sub updateRRD {
         T8=>$temps{Kitchen},
         T9=>$temps{Garage},
         T10=>$temps{Outside},
-        HVAC=>$hvac{status}
+        HVAC=>$hvac{status},
+        T11=>$temps{FrontBed},
+        T12=>$temps{MasterBath},
+        T13=>$temps{MiddleBed}
     );
 }
 
@@ -218,12 +226,12 @@ sub GraphChumby {
         basename => "cby",
         timestamp => "both",
         periods => [qw(hour day week)],
-        sources => [qw(T1 T2 T3 T5 T6 T8 T9 T10)],
+        sources => [qw(T1 T2 T3 T4 T5 T6 T8 T9 T10 T11 T12 T13)],
 	source_labels => {
 	    T1 => "Attic",
 	    T2 => "Basement",
 	    T3 => "Master Bed",
-#	    T4 => "",
+	    T4 => "Front Bath",
 	    T5 => "Utility Room",
 	    T6 => "Thermostat",
 #	    T7 => "",
@@ -231,6 +239,9 @@ sub GraphChumby {
 	    T9 => "Garage",
 	    T10 => "Outside",
 #	    HVAC => "HVAC Status"
+		T11 => "Front Bed",
+		T12 => "Master Bath",
+		T13 => "Mary's Office"
 	},
 	source_colors => {
 	    T1 => "ff8000",
@@ -261,12 +272,12 @@ sub GraphChumby {
         basename => "cby",
         timestamp => "both",
         periods => [qw(month annual)],
-        sources => [qw(T1 T2 T3 T5 T6 T8 T9 T10)],
+        sources => [qw(T1 T2 T3 T4 T5 T6 T8 T9 T10 T11 T12 T13)],
 	source_labels => {
 	    T1 => "Attic",
 	    T2 => "Basement",
 	    T3 => "Master Bed",
-#	    T4 => "",
+	    T4 => "Front Bath",
 	    T5 => "Utility Room",
 	    T6 => "Thermostat",
 #	    T7 => "",
@@ -274,6 +285,9 @@ sub GraphChumby {
 	    T9 => "Garage",
 	    T10 => "Outside",
 #	    HVAC => "HVAC Status"
+		T11 => "Front Bed",
+		T12 => "Master Bath",
+		T13 => "Mary's Office"
 	},
 	source_colors => {
 	    T1 => "ff8000",
@@ -472,33 +486,6 @@ sub getRRDinfo {
     $info = $hvacrrd->info;
     require Data::Dumper;
     print Data::Dumper::Dumper($info);   
-}
-
-sub hvacTime {
-  my ( $starttime, $endtime, $hvactype ) = @_;
-  my @subline;
-  my $cooling = 0;
-  my $heating = 0;
-  
-  #no periods larger than 1 month! too much memory use
-  if($starttime eq 'end-1year') { $starttime = 'end-1month'; }
-  
-  RRDp::start $rrdtool;
-  RRDp::cmd("fetch $hvacdb LAST --start $starttime --end $endtime");
-  my $answer = RRDp::read;
-  my @lines = split(/\n/, $$answer);
-  RRDp::end;
-
-  foreach my $line (@lines) {
-    @subline = split(/ /,  $line);
-#    print "$subline[1]\n";
-    if($subline[1] =~ /\-1\.0000000000e\+01$/) { $cooling++; }
-    elsif($subline[1] =~ /1\.0000000000e\+01$/) { $heating++; }
-  }
-
-  if($hvactype eq 'cooling') { return $cooling; }
-  elsif($hvactype eq 'heating') { return $heating; }
-  else { return ($heating + $cooling) }
 }
 
 sub grabHVACdata {
