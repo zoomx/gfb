@@ -356,6 +356,27 @@ sub GraphChumby {
 	height => "250",
 	"full-size-mode" => "",
     );
+
+# graph workshop info
+    $workshoprrd->graph(
+        destination => $htdocs,
+        basename => "wsp",
+        timestamp => "both",
+        periods => [qw(hour 6hour 12hour day week month annual 3years)],
+        sources => [qw(T1 H1)],
+        source_labels => {
+            T1 => "Temperature",
+            H1 => "Humidity",
+        },
+        source_colors => {
+            T1 => "ff8000",
+            H1 => "4575d7",
+        },
+        line_thickness => 2,
+        width => "745",
+        height => "250",
+        "full-size-mode" => "",
+    );
 }
 
 sub GraphWeb {
