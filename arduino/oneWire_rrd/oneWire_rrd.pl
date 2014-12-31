@@ -34,6 +34,20 @@
 #--start '1230768000' \
 #'DS:HVAC:GAUGE:120:-10:10' \
 #'RRA:LAST:0.5:1:525600'
+#
+## workshop rrd:
+#rrdtool create filename.rrd \
+#--step '60' \
+#'DS:T1:GAUGE:600:-50:150' \
+#'DS:H1:GAUGE:600:-50:150' \
+#'RRA:AVERAGE:0.5:1:20160' \
+#'RRA:AVERAGE:0.5:30:1488' \
+#'RRA:MIN:0.5:30:1488' \
+#'RRA:MAX:0.5:30:1488' \
+#'RRA:AVERAGE:0.5:60:52560' \
+#'RRA:MIN:0.5:60:52560' \
+#'RRA:MAX:0.5:60:52560'
+
 
 #  T1 =  Attic
 #  T2 =  Basement
@@ -54,11 +68,14 @@
 our $base_path = "/data/oneWire_rrd";		# base app path
 our $rrdtool = "rrdtool";			# rrdtool binary
 our $db = "$base_path/ow.rrd";			# path to rrd file                          
+our $workshopdb = "$base_path/workshop.rrd";	# path to rrd file                          
 our $hvacdb = "$base_path/hvacStats.rrd";	# path to rrd file with hvac historical data
 our $rawdb = "$base_path/ow.raw";		# path to raw file
 our $hvacStatsFile = "/var/www/lighttpd/ow/hvacStats.txt";	# path to hvac stats file for web read
 our $htdocs = "$base_path/www";			# path to place graphs
 our $remoteWeb = 'http://127.0.0.1/ow/getTemps.pl';	# data URL
+our $workshop_url = 'https://developer-api.nest.com/devices/thermostats/BkLno3E-0sJA6aUJHyKc5IfYnYOYVFLh?auth=c.SFpILsAFPk1428wZLdmDC057rRFBxbiVsQowuxyESlDPLpYtpe0Y08hfDJfYg0RQHAEbOMXnXSwAhXIbpOvRlPibEJW3b5YlChZG8P5EEf619PVJmLyJkQFIH7RIohia9rjAvTgkNWFnUhZd';
+
 
 our $height = 200;
 our $width = 800;
@@ -66,7 +83,7 @@ our $width = 800;
 #use strict;
 use RRDp ();
 use RRD::Simple ();
-use LWP::Simple ();
+use LWP::Simple;
 use POSIX (); # Used for strftime in graph() method
 
 #use Devel::Size qw(size total_size);
@@ -77,6 +94,7 @@ our %hvac; #store hvac info like status, times, etc
 our @HVACdata;
 our $HVAClastEntry;
 our $HVACfirstEntry;
+our %workshopData;
 
 # open hvac rrd for function use
 our $hvacrrd = RRD::Simple->new(
@@ -88,8 +106,13 @@ our $hvacrrd = RRD::Simple->new(
 our $mainrrd = RRD::Simple->new(
     file => $db,
     on_missing_ds => "die" 
-#    on_missing_ds => "add" 
-    
+#    on_missing_ds => "add"   
+);
+
+# open workshop rrd for function use
+our $workshoprrd = RRD::Simple->new(
+    file => $workshopdb,
+    on_missing_ds => "die"
 );
 
 if ( defined $ARGV[0] ) {
@@ -109,8 +132,11 @@ if ( defined $ARGV[0] ) {
       print "$nowtime -> updating $db...";
       getData();
       print "got data...";
+      getWorkshop();
+      print "got workshop...";
       updateRRD();
-      updateHVAC();
+      updateWorkshop();
+#      updateHVAC();
       updateRAW();
       print "updated!\n";
   }
@@ -129,6 +155,10 @@ if ( defined $ARGV[0] ) {
   elsif ($ARGV[0] eq "test") {
   	  grabHVACdata();
   	  parseHVACdata('end-1month', 'now', 'heating');
+  }
+  elsif ($ARGV[0] eq "workshop") {
+        getWorkshop();
+        updateWorkshop();
   }
   else {
       usage(); 
@@ -177,6 +207,20 @@ sub getData {
     else { die "BAD DATA PULL FROM WEB!"; }
 }
 
+sub getWorkshop {
+    my $workshop_data = get $workshop_url;
+    #die "Couldn't get $workshop_url" unless defined $workshop_data;
+    print "Couldn't get $workshop_url" unless defined $workshop_data;
+
+    $workshop_data =~ s/[\"\{\}]//g;
+    my @list1 = split(/,/, $workshop_data);
+
+    foreach my $item(@list1) {
+        my ($i,$j)= split(/:/, $item);
+        $workshopData{$i} = $j;
+    }
+}
+
 sub updateRRD {
 # update main rrd with current data.
     $mainrrd->update(
@@ -212,6 +256,14 @@ sub updateRAW {
     unshift(@tmpData, time());                  
     my $output = join(',', @tmpData);
     my $ret = `echo $output >> $rawdb`;
+}
+
+sub updateWorkshop {
+# update workshow rrd file with current data
+    $workshoprrd->update(
+        T1=>$workshopData{ambient_temperature_f},
+        H1=>$workshopData{humidity}
+    );
 }
 
 sub GraphChumby {
