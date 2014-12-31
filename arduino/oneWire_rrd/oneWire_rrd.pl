@@ -1,4 +1,4 @@
-#!/psp/usr/bin/perl
+#!/usr/bin/perl
 
 # 10 therms checked every 1 min, -50min, 150max
 # 1 hvac checked every 1 min, -10min (cool), 10max (heat) (0 is off)
@@ -51,16 +51,14 @@
 #  T13 = Middle Bed
 
 
-our $base_path = "/mnt/usb/oneWire_rrd";		# base app path
-#our $base_path = ".";		# base app path
-our $rrdtool = "/mnt/usb/rrdtool/bin/rrdtool";	# rrdtool binary
-#our $rrdtool = "rrdtool";	# rrdtool binary
-our $db = "$base_path/ow.rrd";					# path to rrd file                          
-our $hvacdb = "$base_path/hvacStats.rrd";		# path to rrd file with hvac historical data
-our $rawdb = "$base_path/ow.raw";				# path to raw file
-our $hvacStatsFile = "/mnt/usb/lighty/cgi-bin/hvacStats.txt";	# path to hvac stats file for web read
-our $htdocs = "$base_path/www";					# directory where the graphs will end up
-our $remoteWeb = 'http://127.0.0.1/cgi-bin/getTemps.pl';  # URL to get the data from
+our $base_path = "/data/oneWire_rrd";		# base app path
+our $rrdtool = "rrdtool";			# rrdtool binary
+our $db = "$base_path/ow.rrd";			# path to rrd file                          
+our $hvacdb = "$base_path/hvacStats.rrd";	# path to rrd file with hvac historical data
+our $rawdb = "$base_path/ow.raw";		# path to raw file
+our $hvacStatsFile = "/var/www/lighttpd/ow/hvacStats.txt";	# path to hvac stats file for web read
+our $htdocs = "$base_path/www";			# path to place graphs
+our $remoteWeb = 'http://127.0.0.1/ow/getTemps.pl';	# data URL
 
 our $height = 200;
 our $width = 800;
@@ -270,7 +268,7 @@ sub GraphChumby {
         destination => $htdocs,
         basename => "cby",
         timestamp => "both",
-        periods => [qw(month annual)],
+        periods => [qw(month annual 3years)],
         sources => [qw(T1 T2 T3 T4 T5 T6 T8 T9 T10 T11 T12 T13)],
 	source_labels => {
 	    T1 => "Attic",
